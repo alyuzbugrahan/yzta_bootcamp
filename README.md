@@ -8,11 +8,11 @@
 
 | İsim                 | Rol           |
 | -------------------- | ------------- |
-| [Ad Soyad]           | Product Owner |
+| İrem Ayça Uçankale   | Product Owner |
 | Enver Buğrahan Alyüz | Scrum Master  |
-| [Ad Soyad]           | Developer     |
-| [Ad Soyad]           | Developer     |
-| [Ad Soyad]           | Developer     |
+| Esma Tuğçe Kireşci   | Developer     |
+| Rukiye Dişçi         | Developer     |
+| fatihyalcimin        | Developer     |
 
 ---
 
