@@ -63,8 +63,6 @@
 - 25 Haziran: Aday problem alanları üzerine kısa değerlendirme
 - 2 Temmuz: Sprint 1 kapanış, Sprint 2 planlaması için ön görüşme
 
-_(Not: Bu alan dummy veridir, gerçek daily kayıtları Sprint 2'den itibaren eklenecektir.)_
-
 ### Sprint Board Updates
 
 > Sprint 1'de resmi bir board henüz kurulmadı. Sprint 2 açılışında Notion üzerinde board oluşturulup bu bölüme ekran görüntüsü eklenecektir.
@@ -79,8 +77,8 @@ _(Not: Bu alan dummy veridir, gerçek daily kayıtları Sprint 2'den itibaren ek
 
 ### Sprint Review
 
-- **Tamamlanan:** Tarım+AI alanında genel araştırma yapıldı, 3 aday problem alanı belirlendi.
-- **Tamamlanamayan:** Tek bir fikre karar verilemedi, teknik backlog oluşturulamadı, GitHub repo kurulumu yapılamadı.
+- **Tamamlanan:** Tarım+AI alanında genel araştırma yapıldı, 3 aday problem alanı belirlendi, GitHub repo kurulumu yapıldı.
+- **Tamamlanamayan:** Tek bir fikre karar verilemedi, teknik backlog oluşturulamadı.
 - **Neden:** Takım üyelerinin bootcamp'in ilk haftasında yoğunlukları farklıydı (ders/staj/kişisel programlar), ilk toplanma ve senkronizasyon beklenenden geç oldu.
 
 ### Sprint Retrospective
