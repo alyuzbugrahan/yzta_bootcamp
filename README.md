@@ -133,9 +133,8 @@ Sprint backlog'u önce organizasyonel kararlarla başladı, ardından teknik gel
 **Toplam Sprint 2 backlog puanı:** 39
 
 ### Daily Scrum Notları
-> Slack'te `#daily-checkin` kanalı üzerinden yazılı check-in formatına geçildi (Dün / Bugün / Blocker). Sprint 2 boyunca detaylı günlük kayıtlar henüz Jira/Slack üzerinden README'ye aktarılmadı — bu, gerçek tarih/içerikle doldurulması gereken bir eksik.
+> Slack'te `#daily-checkin` kanalı üzerinden yazılı check-in formatına geçildi (Dün / Bugün / Blocker). Sprint 2 boyunca detaylı günlük kayıtlar henüz Jira/Slack üzerinden README'ye aktarılmadı.
 
-*(Not: Bu alan doldurulmayı bekliyor — gerçek daily kayıtlarınızı buraya ekleyin.)*
 
 ### Sprint Board Updates
 > Jira ("My Software Team" projesi) üzerinde **To Do / In Progress / Done** kolonları kullanılıyor. Sprint 2 boyunca board'un ilerleyişi şöyle oldu:
