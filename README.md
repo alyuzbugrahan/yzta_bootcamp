@@ -68,7 +68,7 @@
 
 <img width="1522" height="833" alt="WhatsApp Image 2026-07-19 at 21 34 06" src="https://github.com/user-attachments/assets/ca1a25d8-884e-444f-9654-ff6d36ec4267" />
 <img width="1517" height="817" alt="WhatsApp Image 2026-07-19 at 21 34 07" src="https://github.com/user-attachments/assets/0cab2584-d0ef-409b-b28d-68ffd36a0b41" />
-<img width="1493" height="837" alt="WhatsApp Image 2026-07-19 at 21 41 48" src="https://github.com/user-attachments/assets/fd54c720-6040-4f38-b936-4f377ff4dcfc" />
+
 
 
 
@@ -138,7 +138,7 @@ Sprint backlog'u önce organizasyonel kararlarla başladı, ardından teknik gel
 
 ### Sprint Board Updates
 > Jira ("My Software Team" projesi) üzerinde **To Do / In Progress / Done** kolonları kullanılıyor. Sprint 2 boyunca board'un ilerleyişi şöyle oldu:
-
+<img width="1493" height="837" alt="WhatsApp Image 2026-07-19 at 21 41 48" src="https://github.com/user-attachments/assets/fd54c720-6040-4f38-b936-4f377ff4dcfc" />
 **Erken Sprint 2 durumu:** Organizasyonel kararların çoğu (proje konusu, roller) Done'a geçmişti; takım ismi ve ürün ismi henüz In Progress, veri seti araştırması To Do'daydı.
 
 **Sprint 2 sonu (güncel) durumu:**
