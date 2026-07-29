@@ -1,0 +1,30 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+# Desktop app runtime output
+data/images/
+data/exports/
+data/logs/
+*.db
+*.db-shm
+*.db-wal
+
+# Models
+models/
+
+# Environment configuration
+.env
+
+# Editor & OS noise
+.DS_Store
+Thumbs.db
+*:Zone.Identifier
+*.Zone.Identifier
+.idea/
+.vscode/
+*.swp
+*~

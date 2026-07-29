@@ -1,0 +1,83 @@
+# Local development stack: api + postgres + minio.
+#
+# Host ports are offset (55432, 59000) so this cannot collide with a PostgreSQL or MinIO
+# already running on the machine.
+#
+#   docker compose up -d          # everything
+#   docker compose up -d postgres minio   # just the dependencies, for running tests on the host
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: figion-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      # Service names, not localhost: inside the compose network these resolve to the
+      # containers, and the published host ports are irrelevant here.
+      FIGION_DATABASE__URL: postgresql+asyncpg://figion:figion@postgres:5432/figion
+      FIGION_STORAGE__BACKEND: s3
+      FIGION_STORAGE__ENDPOINT_URL: http://minio:9000
+      FIGION_STORAGE__ACCESS_KEY: figion
+      FIGION_STORAGE__SECRET_KEY: figion-secret
+      FIGION_STORAGE__BUCKET: figion-images
+      # No model file ships with the repository, so a local stack would otherwise refuse to
+      # boot. Mount real weights at /srv/models and drop this to run against them.
+      FIGION_MODEL__ALLOW_DEMO: "1"
+      FIGION_ENVIRONMENT: dev
+      FIGION_LOG_JSON: "1"
+      FIGION_CORS_ORIGINS: '["http://localhost:5173","http://localhost:3000"]'
+    ports:
+      - "58000:8000"
+    volumes:
+      # Read-only: the process should never be able to modify its own weights.
+      - ./models:/srv/models:ro
+
+  postgres:
+  postgres:
+    image: postgres:16-alpine
+    container_name: figion-pg
+    environment:
+      POSTGRES_USER: figion
+      POSTGRES_PASSWORD: figion
+      POSTGRES_DB: figion_test
+    ports:
+      - "55432:5432"
+    volumes:
+      - figion-pgdata:/var/lib/postgresql/data
+      # Runs once, on an empty data directory. Creates the application database beside the
+      # test one, so the suite's drop_all cannot wipe local development data.
+      - ./docker/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U figion -d figion_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  # S3-compatible object storage. Images are far too numerous to keep in the database and
+  # must be reachable by a browser, which a server filesystem path is not.
+  minio:
+    image: minio/minio:latest
+    container_name: figion-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: figion
+      MINIO_ROOT_PASSWORD: figion-secret
+    ports:
+      - "59000:9000"
+      - "59001:9001"
+    volumes:
+      - figion-miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  figion-pgdata:
+  figion-miniodata:

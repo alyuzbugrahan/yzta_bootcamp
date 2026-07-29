@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.env
+models/*
+!models/.gitkeep
+
+# Test & runtime output
+data/
+*.db
+*.db-shm
+*.db-wal
+

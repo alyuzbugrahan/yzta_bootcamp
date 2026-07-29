@@ -1,0 +1,59 @@
+[project]
+name = "figion-backend"
+version = "0.1.0"
+description = "Figion — aflatoxin detection backend (web)"
+requires-python = ">=3.11"
+
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "structlog>=24.4",
+    "numpy>=1.26",
+    "opencv-python-headless>=4.10",
+    "sqlalchemy[asyncio]>=2.0",
+    "alembic>=1.14",
+    "asyncpg>=0.30",
+    "argon2-cffi>=23.1",
+    "pyjwt>=2.9",
+    "email-validator>=2.2",
+    "reportlab>=4.2",
+]
+
+[project.optional-dependencies]
+# Inference backends. Neither is required to run the domain test suite —
+# Detector degrades to whichever is importable, exactly as the desktop app did.
+onnx = ["onnxruntime>=1.19"]
+torch = ["ultralytics>=8.3"]
+
+# Note: the plan named python-jose; PyJWT is used instead. python-jose has been effectively
+# unmaintained since 2021 and carries known advisories, while PyJWT is the actively maintained
+# reference implementation. Same JWTs either way.
+
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-timeout>=2.3",
+    "aiosqlite>=0.20",
+    "httpx>=0.27",
+    "ruff>=0.7",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+# A WebSocket test that never receives its expected message would otherwise block forever:
+# TestClient.receive_json has no timeout of its own.
+timeout = 60
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
