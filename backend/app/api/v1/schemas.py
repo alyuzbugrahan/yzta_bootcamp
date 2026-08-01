@@ -11,8 +11,9 @@ import uuid as uuid_module
 from dataclasses import asdict
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
+from app.infra.db.models import ScanSession
 from app.infra.repositories.session_repository import SessionSummary
 
 # ── Auth ──────────────────────────────────────────────────────────────────
@@ -60,11 +61,40 @@ class CreateSessionRequest(BaseModel):
         description="Overrides the server default for this session only.",
     )
     device_label: str | None = Field(default=None, max_length=120)
+    fig_weight_g: float | None = Field(
+        default=None,
+        gt=0,
+        le=1000,
+        description="Average single-fig weight in grams for total kilogram calculations.",
+    )
+
+
+class UpdateSessionRequest(BaseModel):
+    batch_id: str = Field(
+        min_length=1,
+        max_length=64,
+        pattern=r"^[A-Za-z0-9._-]+$",
+        description="User-visible batch identifier. Kept storage-safe for exports.",
+    )
+    device_label: str | None = Field(default=None, max_length=120)
+    total_count: int | None = Field(default=None, ge=0, le=10_000_000)
+    defect_count: int | None = Field(default=None, ge=0, le=10_000_000)
+    fig_weight_g: float | None = Field(default=None, gt=0, le=1000)
+
+    @model_validator(mode="after")
+    def validate_manual_counts(self) -> UpdateSessionRequest:
+        if (self.total_count is None) != (self.defect_count is None):
+            raise ValueError("total_count and defect_count must be supplied together")
+        if (
+            self.total_count is not None
+            and self.defect_count is not None
+            and self.defect_count > self.total_count
+        ):
+            raise ValueError("defect_count cannot exceed total_count")
+        return self
 
 
 class SessionResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     uuid: uuid_module.UUID
     batch_id: str
     device_label: str | None
@@ -73,7 +103,37 @@ class SessionResponse(BaseModel):
     end_time: datetime | None
     total_count: int
     defect_count: int
+    detected_total_count: int
+    detected_defect_count: int
+    avg_confidence: float
+    fig_weight_g: float | None
+    total_kg: float | None
+    is_manually_corrected: bool
     is_open: bool
+
+    @classmethod
+    def from_session(cls, session: ScanSession) -> SessionResponse:
+        return cls(
+            uuid=session.uuid,
+            batch_id=session.batch_id,
+            device_label=session.device_label,
+            conf_threshold=session.conf_threshold,
+            start_time=session.start_time,
+            end_time=session.end_time,
+            total_count=session.effective_total_count,
+            defect_count=session.effective_defect_count,
+            detected_total_count=session.total_count,
+            detected_defect_count=session.defect_count,
+            avg_confidence=session.avg_confidence,
+            fig_weight_g=session.fig_weight_g,
+            total_kg=(
+                round(session.effective_total_count * session.fig_weight_g / 1000, 3)
+                if session.fig_weight_g is not None
+                else None
+            ),
+            is_manually_corrected=session.is_manually_corrected,
+            is_open=session.is_open,
+        )
 
 
 class SessionCreatedResponse(SessionResponse):

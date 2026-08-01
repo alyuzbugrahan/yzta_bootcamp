@@ -1,6 +1,6 @@
-# Figion Backend
+# AgroVision Backend
 
-Web backend for the Figion aflatoxin detection system. See
+Web backend for the AgroVision aflatoxin detection system. See
 [`../docs/WEB_MIGRATION_PLAN.md`](../docs/WEB_MIGRATION_PLAN.md) for the full architecture and
 phase plan.
 
@@ -47,7 +47,7 @@ Inference backends are optional extras, so the domain suite runs without them:
 .venv/bin/ruff check app tests alembic
 .venv/bin/python -m alembic upgrade head
 
-FIGION_MODEL__ALLOW_DEMO=1 .venv/bin/uvicorn app.main:app --reload
+AGROVISION_MODEL__ALLOW_DEMO=1 .venv/bin/uvicorn app.main:app --reload
 ```
 
 `GET /api/v1/health` and `GET /api/v1/model/info` are live; OpenAPI is at `/docs`.
@@ -58,28 +58,28 @@ replicas need no sticky-session configuration.
 
 ## Configuration
 
-Environment variables, prefixed `FIGION_`, nested with `__`. See `app/config.py`.
+Environment variables, prefixed `AGROVISION_`, nested with `__`. See `app/config.py`.
 
 | Variable | Default | Notes |
 |---|---|---|
-| `FIGION_MODEL__PATH` | `models/final_model.pt` | `.pt` or `.onnx`; siblings are tried as fallback |
-| `FIGION_MODEL__ALLOW_DEMO` | `false` | Without this, a missing model **refuses to boot** |
-| `FIGION_MODEL__CONF_THRESHOLD` | `0.50` | Per-session default; clients may override |
-| `FIGION_VISION__MIN_AREA_RATIO` | `0.006` | Resolution-independent, unlike the desktop's pixel count |
-| `FIGION_CORS_ORIGINS` | `[]` | JSON list of frontend origins |
-| `FIGION_STORAGE__BACKEND` | `local` | `local` or `s3` (MinIO-compatible) |
-| `FIGION_STORAGE__ENABLED` | `true` | `false` keeps decisions but stores no images |
-| `FIGION_STORAGE__BUCKET` | `figion-images` | s3 only |
-| `FIGION_STORAGE__ENDPOINT_URL` | *(empty)* | Set for MinIO; empty means real AWS |
-| `FIGION_DATABASE__URL` | `sqlite+aiosqlite:///./figion.db` | PostgreSQL is the deployment target |
-| `FIGION_AUTH__SECRET_KEY` | dev placeholder | **Required outside dev**; min 32 bytes |
-| `FIGION_AUTH__ACCESS_TTL_MINUTES` | `15` | Access token lifetime |
-| `FIGION_AUTH__REFRESH_TTL_DAYS` | `30` | Refresh token lifetime |
-| `FIGION_SECURITY__AUTH_ATTEMPTS` | `10` | Credential attempts per IP per window |
-| `FIGION_SECURITY__MAX_CONNECTIONS_PER_USER` | `3` | Simultaneous scan sockets |
-| `FIGION_SECURITY__TRUST_PROXY_HEADERS` | `false` | Only enable behind a proxy that rewrites `X-Forwarded-For` |
-| `FIGION_SECURITY__HSTS` | `false` | Enable when terminating TLS |
-| `FIGION_ENVIRONMENT` | `dev` | `staging`/`prod` refuse to boot on the default signing key |
+| `AGROVISION_MODEL__PATH` | `models/final_model.pt` | `.pt` or `.onnx`; siblings are tried as fallback |
+| `AGROVISION_MODEL__ALLOW_DEMO` | `false` | Without this, a missing model **refuses to boot** |
+| `AGROVISION_MODEL__CONF_THRESHOLD` | `0.50` | Per-session default; clients may override |
+| `AGROVISION_VISION__MIN_AREA_RATIO` | `0.006` | Resolution-independent, unlike the desktop's pixel count |
+| `AGROVISION_CORS_ORIGINS` | `[]` | JSON list of frontend origins |
+| `AGROVISION_STORAGE__BACKEND` | `local` | `local` or `s3` (MinIO-compatible) |
+| `AGROVISION_STORAGE__ENABLED` | `true` | `false` keeps decisions but stores no images |
+| `AGROVISION_STORAGE__BUCKET` | `agrovision-images` | s3 only |
+| `AGROVISION_STORAGE__ENDPOINT_URL` | *(empty)* | Set for MinIO; empty means real AWS |
+| `AGROVISION_DATABASE__URL` | `sqlite+aiosqlite:///./agrovision.db` | PostgreSQL is the deployment target |
+| `AGROVISION_AUTH__SECRET_KEY` | dev placeholder | **Required outside dev**; min 32 bytes |
+| `AGROVISION_AUTH__ACCESS_TTL_MINUTES` | `15` | Access token lifetime |
+| `AGROVISION_AUTH__REFRESH_TTL_DAYS` | `30` | Refresh token lifetime |
+| `AGROVISION_SECURITY__AUTH_ATTEMPTS` | `10` | Credential attempts per IP per window |
+| `AGROVISION_SECURITY__MAX_CONNECTIONS_PER_USER` | `3` | Simultaneous scan sockets |
+| `AGROVISION_SECURITY__TRUST_PROXY_HEADERS` | `false` | Only enable behind a proxy that rewrites `X-Forwarded-For` |
+| `AGROVISION_SECURITY__HSTS` | `false` | Enable when terminating TLS |
+| `AGROVISION_ENVIRONMENT` | `dev` | `staging`/`prod` refuse to boot on the default signing key |
 
 ## API
 
@@ -170,19 +170,19 @@ PostgreSQL is the target; the SQLite default exists so a fresh checkout runs wit
 infrastructure. No query is dialect-specific — the desktop DAO's `SUM(decision = 'Aflatoxin')`
 was, and PostgreSQL rejects it, so it is now `COUNT(*) FILTER (WHERE ...)`.
 
-The test suite honours `FIGION_TEST_DATABASE_URL`, so the same tests run against either
+The test suite honours `AGROVISION_TEST_DATABASE_URL`, so the same tests run against either
 backend. **Run them against PostgreSQL before trusting a persistence change** — that is the
 deployment target:
 
 ```bash
 docker compose up -d
 
-FIGION_TEST_DATABASE_URL=postgresql+asyncpg://figion:figion@127.0.0.1:55432/figion_test \
-FIGION_TEST_S3_ENDPOINT=http://127.0.0.1:59000 \
+AGROVISION_TEST_DATABASE_URL=postgresql+asyncpg://agrovision:agrovision@127.0.0.1:55432/agrovision_test \
+AGROVISION_TEST_S3_ENDPOINT=http://127.0.0.1:59000 \
   .venv/bin/python -m pytest tests -q
 ```
 
-The S3 tests skip unless `FIGION_TEST_S3_ENDPOINT` is set, so the suite still runs with no
+The S3 tests skip unless `AGROVISION_TEST_S3_ENDPOINT` is set, so the suite still runs with no
 object store — but skipped is not passed. Run them before trusting a storage change.
 
 The suite prints the dialect it ran against (`[dialect] postgresql`), so a green run cannot be
@@ -250,7 +250,7 @@ far more than a JPEG.
 
 **Retention is unresolved** (plan §7.2). At ~50 KB per fig and thousands of figs per session,
 this is the storage bill. On desktop the images accumulated on the farmer's own disk and were
-their problem. `FIGION_STORAGE__ENABLED=false` is the blunt answer — decisions and statistics are
+their problem. `AGROVISION_STORAGE__ENABLED=false` is the blunt answer — decisions and statistics are
 kept, no images stored.
 
 ## Hardening notes

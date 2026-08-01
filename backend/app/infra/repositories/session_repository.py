@@ -86,6 +86,7 @@ class SessionRepository:
         batch_id: str,
         conf_threshold: float,
         device_label: str | None = None,
+        fig_weight_g: float | None = None,
     ) -> ScanSession:
         """Open a session.
 
@@ -101,6 +102,7 @@ class SessionRepository:
                 batch_id=candidate,
                 device_label=device_label,
                 conf_threshold=conf_threshold,
+                fig_weight_g=fig_weight_g,
                 start_time=datetime.now(UTC),
             )
             try:
@@ -131,12 +133,14 @@ class SessionRepository:
             select(
                 func.count().label("total"),
                 func.count().filter(Inspection.decision == DECISION_AFLATOXIN).label("defect"),
+                func.avg(Inspection.confidence).label("avg_confidence"),
             ).where(Inspection.session_id == scan_session.id)
         )
-        total, defect = counts.one()
+        total, defect, avg_confidence = counts.one()
 
         scan_session.total_count = total or 0
         scan_session.defect_count = defect or 0
+        scan_session.avg_confidence = round(avg_confidence or 0.0, 4)
         scan_session.end_time = datetime.now(UTC)
 
         await self._session.flush()
@@ -151,6 +155,43 @@ class SessionRepository:
         )
         return bool(result.rowcount)
 
+    async def update_metadata(
+        self,
+        user_id: int,
+        session_uuid: uuid_module.UUID,
+        *,
+        batch_id: str,
+        device_label: str | None,
+        total_count: int | None = None,
+        defect_count: int | None = None,
+        fig_weight_g: float | None = None,
+    ) -> ScanSession | None:
+        """Correct completed-session display data while preserving detector evidence.
+
+        Raw counts remain in ``total_count``/``defect_count`` and continue to match the stored
+        inspection rows. Optional manual totals are separate overrides used by dashboards and
+        summaries, so a producer can correct an operational counting mistake without rewriting
+        or deleting the model's evidence.
+        """
+        scan_session = await self.get(user_id, session_uuid)
+        if scan_session is None:
+            return None
+
+        scan_session.batch_id = batch_id.strip()
+        scan_session.device_label = device_label.strip() if device_label else None
+        if total_count is not None and defect_count is not None:
+            scan_session.manual_total_count = total_count
+            scan_session.manual_defect_count = defect_count
+        if fig_weight_g is not None:
+            scan_session.fig_weight_g = fig_weight_g
+
+        try:
+            await self._session.flush()
+        except IntegrityError as exc:
+            raise ValueError("A batch with this identifier already exists") from exc
+
+        return scan_session
+
     # ── Reads ─────────────────────────────────────────────────────────────
 
     async def get(self, user_id: int, session_uuid: uuid_module.UUID) -> ScanSession | None:
@@ -158,6 +199,27 @@ class SessionRepository:
             select(ScanSession).where(
                 ScanSession.uuid == session_uuid, ScanSession.user_id == user_id
             )
+        )
+        return result.scalar_one_or_none()
+
+    async def first_image_key(
+        self, user_id: int, session_uuid: uuid_module.UUID
+    ) -> str | None:
+        """Return one archived image key so deletion can recover the original storage prefix.
+
+        A batch may be renamed after scanning. Stored image keys intentionally remain immutable,
+        so deriving the prefix from the current batch label would leave the old image directory
+        orphaned.
+        """
+        result = await self._session.execute(
+            select(Inspection.image_key)
+            .join(ScanSession, Inspection.session_id == ScanSession.id)
+            .where(
+                ScanSession.uuid == session_uuid,
+                ScanSession.user_id == user_id,
+                Inspection.image_key.is_not(None),
+            )
+            .limit(1)
         )
         return result.scalar_one_or_none()
 
@@ -203,18 +265,14 @@ class SessionRepository:
 
         result = await self._session.execute(
             select(
-                func.count().label("total"),
-                func.count().filter(Inspection.decision == DECISION_AFLATOXIN).label("aflatoxin"),
-                func.count().filter(Inspection.decision == DECISION_HEALTHY).label("healthy"),
-                func.avg(Inspection.confidence).label("avg_conf"),
                 func.avg(Inspection.latency_ms).label("avg_lat"),
                 func.min(Inspection.latency_ms).label("min_lat"),
                 func.max(Inspection.latency_ms).label("max_lat"),
             ).where(Inspection.session_id == scan_session.id)
         )
         row = result.one()
-        total = row.total or 0
-        aflatoxin = row.aflatoxin or 0
+        total = scan_session.effective_total_count
+        aflatoxin = scan_session.effective_defect_count
 
         return SessionSummary(
             session_id=scan_session.id,
@@ -224,9 +282,9 @@ class SessionRepository:
             end_time=scan_session.end_time,
             total=total,
             aflatoxin=aflatoxin,
-            healthy=row.healthy or 0,
+            healthy=max(total - aflatoxin, 0),
             ratio_pct=round(aflatoxin / total * 100, 2) if total else 0.0,
-            avg_conf=round(row.avg_conf or 0.0, 4),
+            avg_conf=round(scan_session.avg_confidence or 0.0, 4),
             avg_lat_ms=round(row.avg_lat or 0.0, 1),
             min_lat_ms=round(row.min_lat or 0.0, 1),
             max_lat_ms=round(row.max_lat or 0.0, 1),
@@ -276,21 +334,27 @@ class SessionRepository:
         Aggregated in SQL because it is plain counting, which is portable — unlike the
         percentile work in :meth:`fetch_metrics`.
         """
+        effective_total = func.coalesce(
+            ScanSession.manual_total_count, ScanSession.total_count
+        )
+        effective_defect = func.coalesce(
+            ScanSession.manual_defect_count, ScanSession.defect_count
+        )
         result = await self._session.execute(
             select(
-                func.count(func.distinct(ScanSession.id)).label("sessions"),
-                func.count(Inspection.id).label("figs"),
-                func.count(Inspection.id)
-                .filter(Inspection.decision == DECISION_AFLATOXIN)
-                .label("aflatoxin"),
-                func.count(Inspection.id)
-                .filter(Inspection.decision == DECISION_HEALTHY)
-                .label("healthy"),
-                func.avg(Inspection.confidence).label("avg_conf"),
-            )
-            .select_from(ScanSession)
-            .outerjoin(Inspection, Inspection.session_id == ScanSession.id)
-            .where(
+                func.count(ScanSession.id).label("sessions"),
+                func.coalesce(func.sum(effective_total), 0).label("figs"),
+                func.coalesce(func.sum(effective_defect), 0).label("aflatoxin"),
+                func.coalesce(func.sum(effective_total - effective_defect), 0).label(
+                    "healthy"
+                ),
+                func.coalesce(
+                    func.sum(ScanSession.avg_confidence * ScanSession.total_count), 0.0
+                ).label("weighted_confidence"),
+                func.coalesce(func.sum(ScanSession.total_count), 0).label(
+                    "confidence_figs"
+                ),
+            ).where(
                 ScanSession.user_id == user_id,
                 ScanSession.start_time >= start,
                 ScanSession.start_time <= end,
@@ -299,6 +363,7 @@ class SessionRepository:
         row = result.one()
         figs = row.figs or 0
         aflatoxin = row.aflatoxin or 0
+        confidence_figs = row.confidence_figs or 0
 
         return RangeTotals(
             sessions=row.sessions or 0,
@@ -306,7 +371,11 @@ class SessionRepository:
             healthy_count=row.healthy or 0,
             aflatoxin_count=aflatoxin,
             defect_rate_pct=round(aflatoxin / figs * 100, 2) if figs else 0.0,
-            mean_confidence=round(row.avg_conf or 0.0, 4),
+            mean_confidence=(
+                round((row.weighted_confidence or 0.0) / confidence_figs, 4)
+                if confidence_figs
+                else 0.0
+            ),
         )
 
     async def iter_export_rows(

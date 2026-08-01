@@ -69,6 +69,16 @@ async def test_security_headers_are_present(client):
     assert "frame-ancestors 'none'" in response.headers["content-security-policy"]
 
 
+async def test_frontend_csp_allows_its_same_origin_assets(client):
+    response = await client.get("/")
+
+    assert response.status_code == 200
+    policy = response.headers["content-security-policy"]
+    assert "script-src 'self'" in policy
+    assert "style-src 'self'" in policy
+    assert "connect-src 'self' ws: wss:" in policy
+
+
 async def test_hsts_is_absent_when_not_configured(client):
     """Asserting HSTS from a plain-HTTP dev server would pin developers to https://localhost."""
     response = await client.get("/api/v1/health")
@@ -161,11 +171,11 @@ def test_wildcard_cors_is_refused_outside_dev():
 def test_explicit_cors_origins_are_accepted():
     settings = Settings(
         environment="prod",
-        cors_origins=["https://figion.example"],
+        cors_origins=["https://agrovision.example"],
         auth={"secret_key": "a-properly-random-value-of-full-length"},
     )
 
-    assert settings.cors_origins == ["https://figion.example"]
+    assert settings.cors_origins == ["https://agrovision.example"]
 
 
 def test_wildcard_is_allowed_in_dev():

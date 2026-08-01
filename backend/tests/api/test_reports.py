@@ -203,7 +203,55 @@ async def test_pdf_is_offered_as_a_download_named_after_the_batch(client, app, f
     )
 
     assert "attachment" in response.headers["content-disposition"]
-    assert f"{batch_id}_report.pdf" in response.headers["content-disposition"]
+    assert f"{batch_id}_raporu.pdf" in response.headers["content-disposition"]
+
+
+async def test_pdf_can_use_user_or_model_counts(client, app, farmer, monkeypatch):
+    session_uuid = await scanned_session(
+        client, app, farmer, [("Healthy", 0.9)] * 8 + [("Aflatoxin", 0.9)] * 2
+    )
+    stopped = await client.post(
+        f"/api/v1/sessions/{session_uuid}/stop", headers=farmer.headers
+    )
+    session = stopped.json()["session"]
+    await client.patch(
+        f"/api/v1/sessions/{session_uuid}",
+        json={
+            "batch_id": session["batch_id"],
+            "device_label": session["device_label"],
+            "total_count": 12,
+            "defect_count": 3,
+            "fig_weight_g": 20,
+        },
+        headers=farmer.headers,
+    )
+
+    captured = []
+
+    def fake_pdf(report):
+        captured.append(report)
+        return b"%PDF-1.4\n%%EOF"
+
+    monkeypatch.setattr("app.api.v1.reports.render_session_report", fake_pdf)
+
+    model_response = await client.get(
+        f"/api/v1/sessions/{session_uuid}/report.pdf?source=model",
+        headers=farmer.headers,
+    )
+    assert model_response.status_code == 200
+    assert captured[-1].throughput.total_figs == 10
+    assert captured[-1].throughput.aflatoxin_count == 2
+    assert captured[-1].throughput.estimated_mass_g == 200.0
+
+    user_response = await client.get(
+        f"/api/v1/sessions/{session_uuid}/report.pdf?source=user",
+        headers=farmer.headers,
+    )
+    assert user_response.status_code == 200
+    assert captured[-1].throughput.total_figs == 12
+    assert captured[-1].throughput.healthy_count == 9
+    assert captured[-1].throughput.aflatoxin_count == 3
+    assert captured[-1].throughput.estimated_mass_g == 240.0
 
 
 async def test_pdf_renders_for_an_empty_session(client, farmer):

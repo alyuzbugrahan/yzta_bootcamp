@@ -4,7 +4,7 @@ Answers one question: **how many farmers can one replica carry before frame rate
 
 Run it against a live server::
 
-    FIGION_MODEL__ALLOW_DEMO=1 uvicorn app.main:app --port 8000
+    AGROVISION_MODEL__ALLOW_DEMO=1 uvicorn app.main:app --port 8000
     .venv/bin/python tools/loadtest_scan.py --url http://127.0.0.1:8000 --clients 8
 
 Each simulated client self-clocks the way the real browser should (§4.2 of the plan): send one

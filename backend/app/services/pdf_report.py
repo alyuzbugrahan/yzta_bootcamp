@@ -1,97 +1,89 @@
-"""Server-rendered PDF batch report.
-
-A farmer sends this to a buyer, so it has to stand on its own: what was scanned, when, how much
-was contaminated, and how far the numbers should be trusted.
-
-ReportLab rather than a HTML-to-PDF engine. WeasyPrint would give nicer layout but drags Pango,
-Cairo and GDK-Pixbuf into the runtime image for one endpoint; ReportLab is a pure pip install
-and adds nothing to the container beyond a font.
-"""
+"""AgroVision oturum raporunu Türkçe PDF olarak üretir."""
 
 from __future__ import annotations
 
 import io
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import (
-    KeepTogether,
-    Paragraph,
-    SimpleDocTemplate,
-    Spacer,
-    Table,
-    TableStyle,
-)
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from app.core.logging import get_logger
 from app.domain.report import SessionReport
 
 log = get_logger(__name__)
 
-# ReportLab's built-in fonts are Latin-1. That covers ç, ö and ü but not ğ, ı, ş or İ — so a
-# Turkish device label would render as blanks in the very report a farmer hands to a buyer. A
-# DejaVu TTF is registered when one is present; the Dockerfile installs fonts-dejavu-core.
 _FONT_CANDIDATES = (
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    (
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    ),
+    ("C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/arialbd.ttf"),
 )
 
 BODY_FONT = "Helvetica"
 BOLD_FONT = "Helvetica-Bold"
 
-ACCENT = colors.HexColor("#7c3aed")
-DEFECT = colors.HexColor("#E24B4A")
-HEALTHY = colors.HexColor("#1D9E75")
-MUTED = colors.HexColor("#666666")
+ACCENT = colors.HexColor("#245e4c")
+DARK = colors.HexColor("#173f34")
+MUTED = colors.HexColor("#667570")
+LINE = colors.HexColor("#dfe8e4")
+SOFT = colors.HexColor("#f4f7f6")
+DANGER = colors.HexColor("#c84e45")
+HEALTHY = colors.HexColor("#1d8a62")
+REPORT_TZ = timezone(timedelta(hours=3), name="TRT")
 
 
 def _register_fonts() -> tuple[str, str]:
-    """Register DejaVu if available. Falls back to Helvetica rather than failing the request."""
-    regular, bold = _FONT_CANDIDATES
+    for index, (regular, bold) in enumerate(_FONT_CANDIDATES):
+        if not Path(regular).exists():
+            continue
 
-    if not Path(regular).exists():
-        return "Helvetica", "Helvetica-Bold"
+        regular_name = f"AgroVisionSans{index}"
+        bold_name = f"AgroVisionSansBold{index}"
+        try:
+            pdfmetrics.registerFont(TTFont(regular_name, regular))
+            if Path(bold).exists():
+                pdfmetrics.registerFont(TTFont(bold_name, bold))
+                return regular_name, bold_name
+            return regular_name, regular_name
+        except Exception as exc:  # noqa: BLE001
+            log.warning("font_registration_failed", font=regular, error=str(exc))
 
-    try:
-        pdfmetrics.registerFont(TTFont("DejaVuSans", regular))
-        if Path(bold).exists():
-            pdfmetrics.registerFont(TTFont("DejaVuSans-Bold", bold))
-            return "DejaVuSans", "DejaVuSans-Bold"
-        return "DejaVuSans", "DejaVuSans"
-    except Exception as exc:  # noqa: BLE001 - a missing glyph must not fail the download
-        log.warning("font_registration_failed", error=str(exc))
-        return "Helvetica", "Helvetica-Bold"
+    return "Helvetica", "Helvetica-Bold"
 
 
 BODY_FONT, BOLD_FONT = _register_fonts()
 
 
-def _styles():
+def _styles() -> dict[str, ParagraphStyle]:
     sheet = getSampleStyleSheet()
     return {
         "title": ParagraphStyle(
-            "FigionTitle",
+            "AgroVisionTitle",
             parent=sheet["Title"],
             fontName=BOLD_FONT,
             fontSize=18,
-            textColor=colors.HexColor("#1a1a1a"),
+            textColor=DARK,
+            alignment=0,
             spaceAfter=2 * mm,
         ),
         "subtitle": ParagraphStyle(
-            "FigionSubtitle",
+            "AgroVisionSubtitle",
             parent=sheet["Normal"],
             fontName=BODY_FONT,
             fontSize=9,
             textColor=MUTED,
+            leading=13,
             spaceAfter=6 * mm,
         ),
         "heading": ParagraphStyle(
-            "FigionHeading",
+            "AgroVisionHeading",
             parent=sheet["Heading2"],
             fontName=BOLD_FONT,
             fontSize=11,
@@ -100,68 +92,85 @@ def _styles():
             spaceAfter=2 * mm,
         ),
         "body": ParagraphStyle(
-            "FigionBody",
+            "AgroVisionBody",
             parent=sheet["Normal"],
             fontName=BODY_FONT,
             fontSize=9,
+            textColor=colors.HexColor("#263d35"),
             leading=13,
         ),
-        "note": ParagraphStyle(
-            "FigionNote",
+        "footer": ParagraphStyle(
+            "AgroVisionFooter",
             parent=sheet["Normal"],
             fontName=BODY_FONT,
-            fontSize=9,
-            leading=13,
-            leftIndent=4 * mm,
-            spaceAfter=2 * mm,
+            fontSize=7.5,
+            textColor=MUTED,
+            leading=10,
         ),
     }
 
 
-def _table(rows: list[list[str]], widths: list[float], header: bool = True) -> Table:
+def _table(rows: list[list[str]], widths: list[float]) -> Table:
     table = Table(rows, colWidths=widths, hAlign="LEFT")
-
-    style = [
-        ("FONTNAME", (0, 0), (-1, -1), BODY_FONT),
-        ("FONTSIZE", (0, 0), (-1, -1), 9),
-        ("TEXTCOLOR", (0, 0), (-1, -1), colors.HexColor("#1a1a1a")),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("TOPPADDING", (0, 0), (-1, -1), 3),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-        ("LINEBELOW", (0, 0), (-1, -2), 0.25, colors.HexColor("#e5e5e5")),
-    ]
-
-    if header:
-        style += [
-            ("FONTNAME", (0, 0), (-1, 0), BOLD_FONT),
-            ("TEXTCOLOR", (0, 0), (-1, 0), MUTED),
-            ("LINEBELOW", (0, 0), (-1, 0), 0.75, colors.HexColor("#cccccc")),
-        ]
-
-    table.setStyle(TableStyle(style))
+    table.setStyle(
+        TableStyle(
+            [
+                ("FONTNAME", (0, 0), (-1, -1), BODY_FONT),
+                ("FONTSIZE", (0, 0), (-1, -1), 9),
+                ("TEXTCOLOR", (0, 0), (-1, -1), colors.HexColor("#1a2d27")),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                ("BACKGROUND", (0, 0), (0, -1), SOFT),
+                ("FONTNAME", (0, 0), (0, -1), BOLD_FONT),
+                ("TEXTCOLOR", (0, 0), (0, -1), MUTED),
+                ("GRID", (0, 0), (-1, -1), 0.45, LINE),
+            ]
+        )
+    )
     return table
 
 
 def _format_duration(seconds: float) -> str:
-    total = int(seconds)
-    return f"{total // 3600:02d}:{(total % 3600) // 60:02d}:{total % 60:02d}"
+    total = max(int(seconds), 0)
+    hours, remainder = divmod(total, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+
+def _format_datetime(value: datetime | None) -> str:
+    if value is None:
+        return "-"
+    return value.astimezone(REPORT_TZ).strftime("%d.%m.%Y %H:%M")
 
 
 def _format_mass(grams: float | None) -> str:
     if grams is None:
-        return "—"
-    return f"{grams:.0f} g" if grams < 1000 else f"{grams / 1000:.2f} kg"
+        return "Gramaj girilmedi"
+    kilograms = grams / 1000
+    return f"{kilograms:,.3f} kg".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def _format_weight(weight_g: float | None) -> str:
+    if weight_g is None:
+        return "-"
+    return f"{weight_g:g} g"
+
+
+def _source_label(report: SessionReport) -> str:
+    if report.count_source == "model":
+        return "Model sonuçları"
+    if report.manual_counts_applied:
+        return "Kullanıcının girdiği adetler"
+    return "Model sonuçları (manuel adet girişi bulunmuyor)"
 
 
 def render_session_report(report: SessionReport) -> bytes:
-    """Render one batch report to PDF bytes.
-
-    Synchronous and CPU-bound; the endpoint runs it on a worker thread so a large batch does
-    not stall the event loop for every other connected farmer.
-    """
+    """Bir tarama oturumunun Türkçe özet raporunu PDF baytları olarak döndürür."""
     styles = _styles()
     buffer = io.BytesIO()
-
     document = SimpleDocTemplate(
         buffer,
         pagesize=A4,
@@ -169,126 +178,92 @@ def render_session_report(report: SessionReport) -> bytes:
         rightMargin=18 * mm,
         topMargin=16 * mm,
         bottomMargin=16 * mm,
-        title=f"Figion batch report — {report.batch_id}",
-        author="Figion",
+        title=f"AgroVision Oturum Raporu - {report.batch_id}",
+        author="AgroVision",
     )
 
-    flow = []
     throughput = report.throughput
-    analysis = report.analysis
+    status = "Devam ediyor" if report.is_open else "Tamamlandı"
+    device = report.device_label or "Belirtilmedi"
+    generated_at = datetime.now(REPORT_TZ).strftime("%d.%m.%Y %H:%M")
 
-    flow.append(Paragraph("Aflatoxin Inspection Report", styles["title"]))
-
-    scanned = report.started_at.strftime("%Y-%m-%d %H:%M UTC")
-    device = report.device_label or "unspecified device"
-    status = " — SESSION STILL OPEN" if report.is_open else ""
-    flow.append(Paragraph(f"{report.batch_id} · {scanned} · {device}{status}", styles["subtitle"]))
-
-    # ── Throughput ────────────────────────────────────────────────────────
-    flow.append(Paragraph("Batch totals", styles["heading"]))
-    flow.append(
-        _table(
-            [
-                ["Measure", "Value"],
-                ["Figs scanned", f"{throughput.total_figs}"],
-                ["Healthy", f"{throughput.healthy_count}"],
-                ["Aflatoxin", f"{throughput.aflatoxin_count}"],
-                ["Contamination rate", f"{throughput.defect_rate_pct:.2f}%"],
-                ["Estimated mass", _format_mass(throughput.estimated_mass_g)],
-                ["Duration", _format_duration(throughput.duration_seconds)],
-                ["Throughput", f"{throughput.figs_per_minute:.1f} figs/min"],
-            ],
-            widths=[60 * mm, 40 * mm],
-        )
-    )
-
-    # ── Model analysis ────────────────────────────────────────────────────
-    flow.append(Paragraph("Model analysis", styles["heading"]))
-    flow.append(
+    flow = [
+        Paragraph("AgroVision Aflatoksin Kontrol Raporu", styles["title"]),
         Paragraph(
-            "Statistics derived from the detector's own scores for this batch. "
-            f"Confidence threshold in force: {analysis.conf_threshold_used:.0%}.",
-            styles["body"],
-        )
-    )
-    flow.append(Spacer(1, 3 * mm))
-
-    flow.append(
+            f"Parti: <b>{report.batch_id}</b> &nbsp;&nbsp;|&nbsp;&nbsp; "
+            f"Rapor oluşturma: {generated_at}",
+            styles["subtitle"],
+        ),
+        Paragraph("Oturum Bilgileri", styles["heading"]),
         _table(
             [
-                ["Class", "Count", "Share", "Mean conf.", "Lowest conf."],
-                *[
-                    [
-                        row.decision,
-                        f"{row.count}",
-                        f"{row.share_pct:.1f}%",
-                        f"{row.mean_confidence:.1%}" if row.count else "—",
-                        f"{row.min_confidence:.1%}" if row.count else "—",
-                    ]
-                    for row in analysis.per_class
-                ],
+                ["Parti adı", report.batch_id],
+                ["Başlangıç", _format_datetime(report.started_at)],
+                ["Bitiş", _format_datetime(report.ended_at)],
+                ["Cihaz / açıklama", device],
+                ["Oturum durumu", status],
+                ["Rapor veri kaynağı", _source_label(report)],
+                ["Bir ürün gramajı", _format_weight(report.fig_weight_g)],
             ],
-            widths=[35 * mm, 20 * mm, 20 * mm, 28 * mm, 28 * mm],
-        )
-    )
-    flow.append(Spacer(1, 4 * mm))
-
-    flow.append(
+            widths=[55 * mm, 105 * mm],
+        ),
+        Paragraph("Ürün Miktarları", styles["heading"]),
         _table(
             [
-                ["Measure", "Value"],
-                ["Mean confidence", f"{analysis.mean_confidence:.1%}"],
-                ["Median confidence", f"{analysis.median_confidence:.1%}"],
-                [
-                    f"Below {analysis.low_confidence_threshold:.0%} confidence",
-                    (
-                        f"{analysis.low_confidence_count} "
-                        f"({analysis.low_confidence_pct:.1f}%)"
-                    ),
-                ],
-                ["Decision latency (median)", f"{analysis.latency_p50_ms:.0f} ms"],
-                ["Decision latency (95th pct)", f"{analysis.latency_p95_ms:.0f} ms"],
+                ["Toplam ürün miktarı", f"{throughput.total_figs}"],
+                ["Sağlıklı ürün miktarı", f"{throughput.healthy_count}"],
+                ["Aflatoksinli ürün miktarı", f"{throughput.aflatoxin_count}"],
+                ["Aflatoksin oranı", f"%{throughput.defect_rate_pct:.2f}".replace(".", ",")],
+                ["Toplam ağırlık", _format_mass(throughput.estimated_mass_g)],
+                ["Oturum süresi", _format_duration(throughput.duration_seconds)],
             ],
-            widths=[60 * mm, 40 * mm],
-        )
-    )
+            widths=[55 * mm, 105 * mm],
+        ),
+        Spacer(1, 6 * mm),
+    ]
 
-    # ── Distribution ──────────────────────────────────────────────────────
-    if throughput.total_figs:
-        flow.append(Paragraph("Confidence distribution", styles["heading"]))
+    if throughput.aflatoxin_count:
         flow.append(
-            _table(
-                [
-                    ["Confidence", "Figs", "Share"],
-                    *[
-                        [
-                            bucket.label,
-                            f"{bucket.count}",
-                            f"{bucket.count / throughput.total_figs * 100:.1f}%",
-                        ]
-                        for bucket in analysis.confidence_histogram
-                    ],
-                ],
-                widths=[35 * mm, 25 * mm, 25 * mm],
+            Paragraph(
+                "Bu raporda aflatoksinli olarak işaretlenen ürünler bulunmaktadır. "
+                "Nihai ayırma ve kalite kararı yetkili kullanıcı tarafından doğrulanmalıdır.",
+                ParagraphStyle(
+                    "Warning",
+                    parent=styles["body"],
+                    textColor=DANGER,
+                    borderColor=colors.HexColor("#ecc9c5"),
+                    borderWidth=0.6,
+                    borderPadding=8,
+                    backColor=colors.HexColor("#fff4f2"),
+                ),
+            )
+        )
+    else:
+        flow.append(
+            Paragraph(
+                "Seçilen veri kaynağına göre bu oturumda aflatoksinli ürün kaydı bulunmamaktadır.",
+                ParagraphStyle(
+                    "Success",
+                    parent=styles["body"],
+                    textColor=HEALTHY,
+                    borderColor=colors.HexColor("#cce5d8"),
+                    borderWidth=0.6,
+                    borderPadding=8,
+                    backColor=colors.HexColor("#f0faf5"),
+                ),
             )
         )
 
-    # ── Notes ─────────────────────────────────────────────────────────────
-    if report.notes:
-        block = [Paragraph("What to check", styles["heading"])]
-        block += [Paragraph(f"• {note}", styles["note"]) for note in report.notes]
-        # Kept on one page: a heading stranded above a page break reads as an empty section.
-        flow.append(KeepTogether(block))
-
-    flow.append(Spacer(1, 8 * mm))
-    flow.append(
-        Paragraph(
-            "Generated by Figion. Detection depends on UV illumination; figures from a batch "
-            "scanned without a UV lamp are not meaningful.",
-            ParagraphStyle(
-                "Footer", fontName=BODY_FONT, fontSize=7.5, textColor=MUTED, leading=10
+    flow.extend(
+        [
+            Spacer(1, 10 * mm),
+            Paragraph(
+                "Bu rapor AgroVision tarafından oluşturulmuştur. Sonuçların güvenilirliği kamera "
+                "konumu, UV aydınlatma ve kullanıcı tarafından yapılan manuel düzeltmelerden "
+                "etkilenebilir.",
+                styles["footer"],
             ),
-        )
+        ]
     )
 
     document.build(flow)

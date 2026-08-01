@@ -1,4 +1,4 @@
-# Figion backend.
+# AgroVision backend.
 #
 # Two stages: a builder that compiles wheels, and a slim runtime that carries none of the
 # toolchain. argon2-cffi and asyncpg both build native extensions, so gcc has to exist
@@ -25,7 +25,7 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 RUN pip install --upgrade pip \
-    && pip install '.[onnx]'
+    && pip install '.[onnx,rag,s3]'
 
 # ── Runtime ───────────────────────────────────────────────────────────────
 FROM python:3.12-slim AS runtime
@@ -53,15 +53,17 @@ WORKDIR /srv
 COPY alembic.ini ./
 COPY alembic ./alembic
 COPY app ./app
+COPY frontend ./frontend
+COPY rag_assets ./rag_assets
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 
 RUN chmod +x /usr/local/bin/entrypoint.sh \
-    && useradd --create-home --uid 10001 figion \
-    && chown -R figion:figion /srv
+    && useradd --create-home --uid 10001 agrovision \
+    && chown -R agrovision:agrovision /srv
 
 # Unprivileged: the process decodes attacker-supplied JPEGs, so a decoder bug should not land
 # on root.
-USER figion
+USER agrovision
 
 EXPOSE 8000
 

@@ -3,7 +3,7 @@
 These cover the specific things that a SQLite-only run cannot prove. They are written to pass on
 both dialects, so they are meaningful only when the suite is pointed at PostgreSQL::
 
-    FIGION_TEST_DATABASE_URL=postgresql+asyncpg://figion:figion@127.0.0.1:55432/figion_test
+    AGROVISION_TEST_DATABASE_URL=postgresql+asyncpg://agrovision:agrovision@127.0.0.1:55432/agrovision_test
 
 ``test_dialect_in_use`` reports which backend actually ran, so a green suite cannot be mistaken
 for PostgreSQL coverage it did not have.

@@ -85,8 +85,27 @@ class ScanSession(Base):
         CheckConstraint("total_count >= 0", name="ck_sessions_total_nonneg"),
         CheckConstraint("defect_count >= 0", name="ck_sessions_defect_nonneg"),
         CheckConstraint("defect_count <= total_count", name="ck_sessions_defect_lte_total"),
+        CheckConstraint(
+            "manual_total_count IS NULL OR manual_total_count >= 0",
+            name="ck_sessions_manual_total_nonneg",
+        ),
+        CheckConstraint(
+            "manual_defect_count IS NULL OR manual_defect_count >= 0",
+            name="ck_sessions_manual_defect_nonneg",
+        ),
+        CheckConstraint(
+            "(manual_total_count IS NULL AND manual_defect_count IS NULL) OR "
+            "(manual_total_count IS NOT NULL AND manual_defect_count IS NOT NULL "
+            "AND manual_defect_count <= manual_total_count)",
+            name="ck_sessions_manual_counts_valid",
+        ),
+        CheckConstraint(
+            "fig_weight_g IS NULL OR (fig_weight_g > 0 AND fig_weight_g <= 1000)",
+            name="ck_sessions_fig_weight_valid",
+        ),
         UniqueConstraint("user_id", "batch_id", name="uq_sessions_user_batch"),
         Index("idx_sessions_user", "user_id", "id"),
+        Index("idx_sessions_user_start", "user_id", "start_time"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -110,6 +129,21 @@ class ScanSession(Base):
 
     total_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     defect_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # Maintained incrementally while scanning and recomputed when a session closes. Keeping this
+    # aggregate on the session lets the dashboard summarise thousands of inspections without
+    # joining and scanning the full inspection table on every visit.
+    avg_confidence: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0, server_default="0"
+    )
+
+    # Optional user correction. Raw detector totals remain intact for audit/export; dashboards
+    # and summaries use these overrides when present.
+    manual_total_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    manual_defect_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    # Average single-fig weight used to calculate the batch's total kilograms. Stored per
+    # session so historical tables and PDF reports do not depend on the browser's local state.
+    fig_weight_g: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     user: Mapped[User] = relationship(back_populates="sessions")
     inspections: Mapped[list[Inspection]] = relationship(
@@ -119,6 +153,26 @@ class ScanSession(Base):
     @property
     def is_open(self) -> bool:
         return self.end_time is None
+
+    @property
+    def effective_total_count(self) -> int:
+        return (
+            self.manual_total_count
+            if self.manual_total_count is not None
+            else self.total_count
+        )
+
+    @property
+    def effective_defect_count(self) -> int:
+        return (
+            self.manual_defect_count
+            if self.manual_defect_count is not None
+            else self.defect_count
+        )
+
+    @property
+    def is_manually_corrected(self) -> bool:
+        return self.manual_total_count is not None
 
 
 class Inspection(Base):

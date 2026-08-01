@@ -10,7 +10,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: figion-api
+    container_name: agrovision-api
     depends_on:
       postgres:
         condition: service_healthy
@@ -19,18 +19,20 @@ services:
     environment:
       # Service names, not localhost: inside the compose network these resolve to the
       # containers, and the published host ports are irrelevant here.
-      FIGION_DATABASE__URL: postgresql+asyncpg://figion:figion@postgres:5432/figion
-      FIGION_STORAGE__BACKEND: s3
-      FIGION_STORAGE__ENDPOINT_URL: http://minio:9000
-      FIGION_STORAGE__ACCESS_KEY: figion
-      FIGION_STORAGE__SECRET_KEY: figion-secret
-      FIGION_STORAGE__BUCKET: figion-images
+      AGROVISION_DATABASE__URL: postgresql+asyncpg://agrovision:agrovision@postgres:5432/agrovision
+      AGROVISION_STORAGE__BACKEND: s3
+      AGROVISION_STORAGE__ENDPOINT_URL: http://minio:9000
+      AGROVISION_STORAGE__ACCESS_KEY: agrovision
+      AGROVISION_STORAGE__SECRET_KEY: agrovision-secret
+      AGROVISION_STORAGE__BUCKET: agrovision-images
       # No model file ships with the repository, so a local stack would otherwise refuse to
       # boot. Mount real weights at /srv/models and drop this to run against them.
-      FIGION_MODEL__ALLOW_DEMO: "1"
-      FIGION_ENVIRONMENT: dev
-      FIGION_LOG_JSON: "1"
-      FIGION_CORS_ORIGINS: '["http://localhost:5173","http://localhost:3000"]'
+      AGROVISION_MODEL__ALLOW_DEMO: "1"
+      AGROVISION_ENVIRONMENT: dev
+      AGROVISION_LOG_JSON: "1"
+      AGROVISION_CORS_ORIGINS: '["http://localhost:58000"]'
+      AGROVISION_RAG__ENABLED: "1"
+      AGROVISION_RAG__API_KEY: ${GOOGLE_API_KEY:-}
     ports:
       - "58000:8000"
     volumes:
@@ -38,22 +40,21 @@ services:
       - ./models:/srv/models:ro
 
   postgres:
-  postgres:
     image: postgres:16-alpine
-    container_name: figion-pg
+    container_name: agrovision-pg
     environment:
-      POSTGRES_USER: figion
-      POSTGRES_PASSWORD: figion
-      POSTGRES_DB: figion_test
+      POSTGRES_USER: agrovision
+      POSTGRES_PASSWORD: agrovision
+      POSTGRES_DB: agrovision_test
     ports:
       - "55432:5432"
     volumes:
-      - figion-pgdata:/var/lib/postgresql/data
+      - agrovision-pgdata:/var/lib/postgresql/data
       # Runs once, on an empty data directory. Creates the application database beside the
       # test one, so the suite's drop_all cannot wipe local development data.
       - ./docker/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U figion -d figion_test"]
+      test: ["CMD-SHELL", "pg_isready -U agrovision -d agrovision_test"]
       interval: 2s
       timeout: 3s
       retries: 15
@@ -62,16 +63,16 @@ services:
   # must be reachable by a browser, which a server filesystem path is not.
   minio:
     image: minio/minio:latest
-    container_name: figion-minio
+    container_name: agrovision-minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: figion
-      MINIO_ROOT_PASSWORD: figion-secret
+      MINIO_ROOT_USER: agrovision
+      MINIO_ROOT_PASSWORD: agrovision-secret
     ports:
       - "59000:9000"
       - "59001:9001"
     volumes:
-      - figion-miniodata:/data
+      - agrovision-miniodata:/data
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 3s
@@ -79,5 +80,5 @@ services:
       retries: 20
 
 volumes:
-  figion-pgdata:
-  figion-miniodata:
+  agrovision-pgdata:
+  agrovision-miniodata:

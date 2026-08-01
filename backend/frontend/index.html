@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102a25">
+  <title>AgroVision | Akıllı İncir Analizi</title>
+  <link rel="icon" href="/static/agrovision.png">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div id="toast-region" class="toast-region" aria-live="polite"></div>
+
+  <main id="auth-view" class="auth-shell">
+    <section class="auth-visual">
+      <div class="brand brand--large">
+        <img src="/static/agrovision.png" alt="AgroVision logosu">
+        <div><strong>AGROVISION</strong><span>Akıllı İncir Analizi</span></div>
+      </div>
+      <div class="hero-copy">
+        <span class="eyebrow">Yapay zekâ + doğrulanmış tarım kaynakları</span>
+        <h1>Ürünü analiz et,<br>doğru aksiyonu öğren.</h1>
+        <p>Canlı görüntü işleme ile aflatoksin riskini takip edin; RAG destekli üretici asistanından kaynaklı öneriler alın.</p>
+        <div class="hero-points">
+          <div><span>01</span><p>Gerçek zamanlı tarama</p></div>
+          <div><span>02</span><p>Parti bazlı raporlama</p></div>
+          <div><span>03</span><p>Kaynak-temelli RAG asistanı</p></div>
+        </div>
+      </div>
+      <div class="auth-visual__orb auth-visual__orb--one"></div>
+      <div class="auth-visual__orb auth-visual__orb--two"></div>
+    </section>
+
+    <section class="auth-panel">
+      <div class="auth-card">
+        <div class="auth-card__header">
+          <span class="mobile-logo"><img src="/static/agrovision.png" alt=""><b>AGROVISION</b></span>
+          <span class="eyebrow">Hoş geldiniz</span>
+          <h2 id="auth-title">Hesabınıza giriş yapın</h2>
+          <p id="auth-subtitle">Tarama oturumlarınıza ve üretici asistanına erişin.</p>
+        </div>
+
+        <form id="auth-form" novalidate>
+          <label for="email">E-posta</label>
+          <input id="email" type="email" autocomplete="email" placeholder="ornek@firma.com" required>
+          <label for="password">Şifre</label>
+          <div class="password-field">
+            <input id="password" type="password" autocomplete="current-password" placeholder="En az 8 karakter" required>
+            <button id="toggle-password" type="button" aria-label="Şifreyi göster">Göster</button>
+          </div>
+          <button id="auth-submit" class="button button--primary button--wide" type="submit">
+            <span>Giriş yap</span><span aria-hidden="true">→</span>
+          </button>
+        </form>
+
+        <p class="auth-switch"><span id="auth-switch-label">Hesabınız yok mu?</span> <button id="auth-switch" type="button">Kayıt olun</button></p>
+        <div class="auth-demo-note"><span>i</span><p>Yerel demo çalıştırmasında gerçek model dosyası yoksa sistem güvenli demo modunda açılır.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="app-view" class="app-shell hidden">
+    <aside class="sidebar">
+      <a class="brand" href="#dashboard" data-nav="dashboard">
+        <img src="/static/agrovision.png" alt="AgroVision logosu">
+        <div><strong>AGROVISION</strong><span>Akıllı İncir Analizi</span></div>
+      </a>
+      <nav class="main-nav" aria-label="Ana menü">
+        <button class="nav-item active" data-page="dashboard"><span class="nav-icon">⌂</span><span>Genel Bakış</span></button>
+        <button class="nav-item" data-page="scanner"><span class="nav-icon">◎</span><span>Canlı Tarama</span></button>
+        <button class="nav-item" data-page="assistant"><span class="nav-icon">✦</span><span>Üretici Asistanı</span></button>
+        <button class="nav-item" data-page="history"><span class="nav-icon">≡</span><span>Geçmiş Oturumlar</span></button>
+      </nav>
+      <div class="sidebar-status">
+        <div class="status-dot" id="system-status-dot"></div>
+        <div><strong id="system-status-text">Sistem kontrol ediliyor</strong><span id="model-mode-text">—</span></div>
+      </div>
+      <div class="sidebar-user">
+        <div class="avatar" id="user-avatar">F</div>
+        <div class="sidebar-user__meta"><strong id="user-email">—</strong><span>Üretici hesabı</span></div>
+        <button id="logout-button" class="icon-button" title="Çıkış yap">↪</button>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <header class="topbar">
+        <button id="mobile-menu" class="mobile-menu" aria-label="Menüyü aç">☰</button>
+        <div>
+          <span class="eyebrow" id="page-eyebrow">Kontrol merkezi</span>
+          <h1 id="page-title">Genel Bakış</h1>
+        </div>
+        <div class="topbar-actions">
+          <span class="clock" id="live-clock"></span>
+          <button class="button button--primary" data-go="scanner"><span>Yeni tarama</span><span>＋</span></button>
+        </div>
+      </header>
+
+      <div class="page-container">
+        <section id="page-dashboard" class="page active">
+          <div class="welcome-card">
+            <div>
+              <span class="eyebrow">Bugünün özeti</span>
+              <h2>Ürün kalitenizi tek ekrandan yönetin.</h2>
+              <p>Tarama sonuçları, aflatoksin oranı ve son parti hareketleri otomatik olarak güncellenir.</p>
+            </div>
+            <button class="button button--light" data-go="scanner">Kamerayı aç <span>→</span></button>
+          </div>
+
+          <div class="metric-grid">
+            <article class="metric-card"><div class="metric-icon">◉</div><span>Toplam taranan</span><strong id="metric-total">—</strong><small>Son 30 gün</small></article>
+            <article class="metric-card"><div class="metric-icon metric-icon--good">✓</div><span>Sağlıklı ürün</span><strong id="metric-healthy">—</strong><small id="metric-healthy-rate">—</small></article>
+            <article class="metric-card"><div class="metric-icon metric-icon--danger">!</div><span>Aflatoksin riski</span><strong id="metric-aflatoxin">—</strong><small id="metric-defect-rate">—</small></article>
+            <article class="metric-card"><div class="metric-icon metric-icon--accent">✦</div><span>Ortalama güven</span><strong id="metric-confidence">—</strong><small>Model skoru</small></article>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="panel panel--wide">
+              <div class="panel-header"><div><span class="eyebrow">Parti geçmişi</span><h3>Son taramalar</h3></div><button class="text-button" data-go="history">Tümünü gör →</button></div>
+              <div class="table-wrap">
+                <table><thead><tr><th>Parti</th><th>Tarih</th><th>Toplam Ürün Miktarı</th><th>Sağlıklı Ürün Miktarı</th><th>Aflatoksinli Ürün Miktarı</th><th>Toplam KG</th><th class="actions-column">İşlemler</th></tr></thead><tbody id="recent-sessions-body"><tr><td colspan="7" class="empty-cell">Veriler yükleniyor…</td></tr></tbody></table>
+              </div>
+            </article>
+            <article class="panel assistant-preview">
+              <div class="assistant-preview__icon">✦</div>
+              <span class="eyebrow">RAG destekli</span><h3>Üretici Asistanı</h3>
+              <p>Kurutma, depolama, aflatoksin önleme ve ihracat konularını doğrulanmış belge havuzuna sorun.</p>
+              <div id="rag-status-chip" class="status-chip">RAG kontrol ediliyor</div>
+              <button class="button button--secondary button--wide" data-go="assistant">Asistana soru sor</button>
+            </article>
+          </div>
+        </section>
+
+        <section id="page-scanner" class="page">
+          <div class="scanner-layout">
+            <article class="camera-panel panel">
+              <div class="panel-header scanner-header">
+                <div><span class="eyebrow">Gerçek zamanlı analiz</span><h3>Canlı kamera</h3></div>
+                <div class="live-badge" id="scan-badge"><span></span>Hazır</div>
+              </div>
+              <div class="camera-stage" id="camera-stage">
+                <video id="camera-video" autoplay muted playsinline></video>
+                <canvas id="overlay-canvas"></canvas>
+                <div id="camera-placeholder" class="camera-placeholder">
+                  <div class="camera-placeholder__icon">◎</div>
+                  <h3>Kamera henüz başlatılmadı</h3>
+                  <p>Canlı analize başlamak için aşağıdaki butonu kullanın.</p>
+                </div>
+                <div class="camera-hud camera-hud--top"><span id="hud-batch">Parti: —</span><span id="hud-fps">0.0 FPS</span></div>
+                <div class="camera-hud camera-hud--bottom"><span id="hud-latency">Gecikme: —</span><span id="hud-detections">Tespit: 0</span></div>
+              </div>
+              <canvas id="capture-canvas" class="hidden"></canvas>
+              <div class="scanner-controls">
+                <label class="field-inline"><span>Güven eşiği</span><input id="confidence-range" type="range" min="0" max="1" step="0.01" value="0.50"><b id="confidence-value">%50</b></label>
+                <div class="scanner-buttons">
+                  <button id="start-scan" class="button button--primary">Kamerayı başlat</button>
+                  <button id="pause-scan" class="button button--secondary hidden">Duraklat</button>
+                  <button id="stop-scan" class="button button--danger hidden">Oturumu bitir</button>
+                </div>
+              </div>
+            </article>
+
+            <aside class="scan-sidebar">
+              <article class="panel live-stats">
+                <div class="panel-header"><div><span class="eyebrow">Canlı sayaç</span><h3>Oturum özeti</h3></div></div>
+                <div class="live-stat-row"><span>Kaydedilen incir</span><strong id="live-recorded">0</strong></div>
+                <label class="live-weight-field" for="fig-weight-input">
+                  <span>1 incir gramajı</span>
+                  <span class="weight-input-wrap"><input id="fig-weight-input" type="number" min="0.1" max="1000" step="0.1" inputmode="decimal" placeholder="Örn. 20"><b>g</b></span>
+                </label>
+                <div class="live-stat-row live-stat-row--total"><span>Toplam ağırlık</span><strong id="live-total-kg">—</strong></div>
+                <div class="live-stat-row"><span>Sağlıklı</span><strong class="text-good" id="live-healthy">0</strong></div>
+                <div class="live-stat-row"><span>Aflatoksin</span><strong class="text-danger" id="live-aflatoxin">0</strong></div>
+                <div class="progress"><span id="live-health-bar" style="width:0%"></span></div>
+                <small id="live-dropped">İşlenen: 0 · Atlanan: 0</small>
+              </article>
+
+              <article class="panel advice-panel">
+                <div class="panel-header"><div><span class="eyebrow">Otomatik öneri</span><h3>RAG değerlendirmesi</h3></div><span class="spark">✦</span></div>
+                <div id="scan-advice" class="advice-empty"><span>✦</span><p>Bir ürün kaydedildiğinde sonuca özel kaynak-temelli öneri burada gösterilir.</p></div>
+              </article>
+
+            </aside>
+          </div>
+        </section>
+
+        <section id="page-assistant" class="page">
+          <div class="assistant-layout">
+            <section class="assistant-chat panel">
+              <div class="assistant-chat__head">
+                <div class="assistant-orb">✦</div>
+                <div><span class="eyebrow">Belge tabanlı danışman</span><h3>İncir Üretici Asistanı</h3><p>Yanıtlar yalnızca projedeki doğrulanmış kaynaklardan üretilir.</p></div>
+              </div>
+              <div id="chat-messages" class="chat-messages">
+                <div class="message message--assistant"><div class="message-avatar">✦</div><div class="message-bubble"><p>Merhaba! Aflatoksin, kurutma, nem, depolama veya kuru incir ihracatı hakkında sorunuzu yazabilirsiniz.</p></div></div>
+              </div>
+              <form id="chat-form" class="chat-composer">
+                <textarea id="chat-input" rows="2" maxlength="1000" placeholder="Örn: Kuru incirde aflatoksin riskini azaltmak için kurutma nasıl yapılmalı?"></textarea>
+                <button class="button button--primary" type="submit" aria-label="Soruyu gönder">Gönder ↑</button>
+              </form>
+              <div class="quick-prompts">
+                <button data-question="Kuru incirde aflatoksin nasıl önlenir?">Aflatoksin önleme</button>
+                <button data-question="Kurutma sırasında nem kontrolü nasıl yapılmalı?">Kurutma ve nem</button>
+                <button data-question="Kuru incir hangi koşullarda depolanmalı?">Depolama koşulları</button>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="page-history" class="page">
+          <div class="history-toolbar panel">
+            <div><span class="eyebrow">Kayıt arşivi</span><h3>Tarama oturumları</h3></div>
+            <div class="history-actions"><input id="history-search" type="search" placeholder="Parti numarası ara"><button id="refresh-history" class="button button--secondary">Yenile</button></div>
+          </div>
+          <div class="history-layout">
+            <article class="panel history-list-panel">
+              <div class="table-wrap">
+                <table class="history-table"><thead><tr><th>Parti</th><th>Başlangıç</th><th>Toplam</th><th>Sağlıklı</th><th>Aflatoksinli</th><th>Toplam KG</th><th></th></tr></thead><tbody id="history-body"><tr><td colspan="7" class="empty-cell">Oturumlar yükleniyor…</td></tr></tbody></table>
+              </div>
+              <button id="load-more-history" class="button button--secondary button--wide hidden">Daha fazla yükle</button>
+            </article>
+            <aside id="session-detail" class="panel session-detail">
+              <div class="empty-state"><span>≡</span><h3>Bir oturum seçin</h3><p>Parti bilgileri, ürün miktarları ve rapor seçenekleri burada görünür.</p></div>
+            </aside>
+          </div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <div id="session-edit-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="session-edit-title">
+    <form id="session-edit-form" class="modal-card">
+      <div class="modal-head">
+        <div><span class="eyebrow">Kayıt düzeltme</span><h3 id="session-edit-title">Tarama kaydını düzenle</h3></div>
+        <button id="close-session-edit" class="modal-close" type="button" aria-label="Pencereyi kapat">×</button>
+      </div>
+      <label class="modal-field"><span>Parti adı</span><input id="edit-batch-id" name="batch_id" maxlength="64" pattern="[A-Za-z0-9._-]+" required></label>
+      <small class="modal-hint">Harf, sayı, nokta, tire ve alt çizgi kullanılabilir.</small>
+      <label class="modal-field"><span>Cihaz / açıklama</span><input id="edit-device-label" name="device_label" maxlength="120" placeholder="Örn. Web kamera"></label>
+      <div class="modal-field-grid">
+        <label class="modal-field"><span>Toplam ürün</span><input id="edit-total-count" name="total_count" type="number" min="0" max="10000000" step="1" required></label>
+        <label class="modal-field"><span>Aflatoksinli ürün</span><input id="edit-defect-count" name="defect_count" type="number" min="0" max="10000000" step="1" required></label>
+      </div>
+      <label class="modal-field"><span>Bir ürün gramajı</span><input id="edit-fig-weight" name="fig_weight_g" type="number" min="0.1" max="1000" step="0.1" placeholder="Örn. 20"></label>
+      <p id="edit-count-note" class="modal-note">Düzeltme ekranda ve özetlerde kullanılır; modelin ham tespit kayıtları denetim ve dışa aktarma için korunur.</p>
+      <div class="modal-actions">
+        <button id="cancel-session-edit" class="button button--secondary" type="button">Vazgeç</button>
+        <button id="save-session-edit" class="button button--primary" type="submit">Kaydet</button>
+      </div>
+    </form>
+  </div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

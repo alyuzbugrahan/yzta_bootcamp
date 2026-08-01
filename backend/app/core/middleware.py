@@ -14,7 +14,7 @@ from starlette.types import ASGIApp
 from app.core.errors import ErrorCode
 
 # Applies to JSON request bodies only. Frames arrive over the WebSocket and are bounded
-# separately by FIGION_INGEST__MAX_FRAME_BYTES, which is a much larger and quite different limit.
+# separately by AGROVISION_INGEST__MAX_FRAME_BYTES, which is a much larger and quite different limit.
 DEFAULT_MAX_BODY_BYTES = 256 * 1024
 
 
@@ -74,11 +74,26 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers.setdefault("Referrer-Policy", "no-referrer")
         response.headers.setdefault("Cross-Origin-Resource-Policy", "same-origin")
 
-        # An API serves no scripts, styles or frames of its own; forbidding all of them means a
-        # response rendered directly in a browser cannot execute anything.
-        response.headers.setdefault(
-            "Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"
-        )
+        # API responses execute nothing. The same FastAPI process also serves the bundled web
+        # client at / and /static, so those two paths receive a narrow same-origin policy that
+        # permits its stylesheet, script, camera preview and scanning WebSocket.
+        if request.url.path == "/" or request.url.path.startswith("/static/"):
+            content_security_policy = (
+                "default-src 'self'; "
+                "script-src 'self'; "
+                "style-src 'self'; "
+                "img-src 'self' data: blob:; "
+                "media-src 'self' blob:; "
+                "connect-src 'self' ws: wss:; "
+                "object-src 'none'; "
+                "base-uri 'self'; "
+                "form-action 'self'; "
+                "frame-ancestors 'none'"
+            )
+        else:
+            content_security_policy = "default-src 'none'; frame-ancestors 'none'"
+
+        response.headers.setdefault("Content-Security-Policy", content_security_policy)
 
         if self._hsts:
             response.headers.setdefault(

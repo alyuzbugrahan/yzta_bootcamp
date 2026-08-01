@@ -19,8 +19,8 @@ from sqlalchemy import func, insert, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.models import InspectionResult
-from app.infra.db.models import Inspection
+from app.domain.models import DECISION_AFLATOXIN, InspectionResult
+from app.infra.db.models import Inspection, ScanSession
 
 MAX_ALLOCATION_ATTEMPTS = 3
 
@@ -75,6 +75,23 @@ class InspectionRepository:
                 if attempt == MAX_ALLOCATION_ATTEMPTS - 1:
                     raise
                 continue
+
+            # Keep lightweight session aggregates current in the same transaction. Dashboard
+            # totals can then read only the sessions table instead of joining every inspection.
+            is_defect = 1 if result.decision == DECISION_AFLATOXIN else 0
+            await self._session.execute(
+                update(ScanSession)
+                .where(ScanSession.id == session_id)
+                .values(
+                    avg_confidence=(
+                        (ScanSession.avg_confidence * ScanSession.total_count)
+                        + result.confidence
+                    )
+                    / (ScanSession.total_count + 1),
+                    total_count=ScanSession.total_count + 1,
+                    defect_count=ScanSession.defect_count + is_defect,
+                )
+            )
 
             result.id = inspection_id
             result.fig_seq = fig_seq

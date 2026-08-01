@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid as uuid_module
 from datetime import UTC, datetime, timedelta
-from typing import Annotated
+from typing import Annotated, Literal
 
 import anyio.to_thread
 from fastapi import APIRouter, Query, Response
@@ -27,7 +27,11 @@ MAX_RANGE_DAYS = 366
 
 
 async def _load_report(
-    sessions, user_id: int, session_uuid: uuid_module.UUID, fig_weight_g: float | None
+    sessions,
+    user_id: int,
+    session_uuid: uuid_module.UUID,
+    fig_weight_g: float | None,
+    count_source: Literal["user", "model"] = "model",
 ):
     scan = await sessions.get(user_id, session_uuid)
     if scan is None:
@@ -37,6 +41,7 @@ async def _load_report(
     if metrics is None:
         raise NotFound("Session not found")
 
+    use_user_counts = count_source == "user"
     return build_session_report(
         batch_id=scan.batch_id,
         device_label=scan.device_label,
@@ -45,7 +50,11 @@ async def _load_report(
         conf_threshold_used=scan.conf_threshold,
         metrics=metrics,
         now=datetime.now(UTC),
-        fig_weight_g=fig_weight_g,
+        fig_weight_g=fig_weight_g if fig_weight_g is not None else scan.fig_weight_g,
+        total_count_override=scan.effective_total_count if use_user_counts else None,
+        defect_count_override=scan.effective_defect_count if use_user_counts else None,
+        count_source=count_source,
+        manual_counts_applied=use_user_counts and scan.is_manually_corrected,
     )
 
 
@@ -59,8 +68,8 @@ async def session_report(
         gt=0,
         le=1000,
         description=(
-            "Average fig weight in grams. Supplied per request rather than stored: the desktop "
-            "app had this field but never persisted it, and it varies by variety and drying."
+            "Optional average fig weight override in grams. When omitted, the weight stored "
+            "for the session is used."
         ),
     ),
 ) -> SessionReportResponse:
@@ -75,9 +84,19 @@ async def session_report_pdf(
     user: CurrentUser,
     sessions: SessionRepositoryDep,
     fig_weight_g: float | None = Query(default=None, gt=0, le=1000),
+    source: Literal["user", "model"] = Query(
+        default="user",
+        description="Use user-corrected totals or the detector's raw model totals.",
+    ),
 ) -> Response:
-    """The same report as a downloadable PDF."""
-    report = await _load_report(sessions, user.id, session_uuid, fig_weight_g)
+    """Download a Turkish PDF using either user-entered or raw model counts."""
+    report = await _load_report(
+        sessions,
+        user.id,
+        session_uuid,
+        fig_weight_g,
+        count_source=source,
+    )
 
     # Rendering is CPU-bound and synchronous. On the event loop it would stall every other
     # connected farmer's frames for the duration.
@@ -87,7 +106,7 @@ async def session_report_pdf(
         content=pdf,
         media_type="application/pdf",
         headers={
-            "Content-Disposition": f'attachment; filename="{report.batch_id}_report.pdf"',
+            "Content-Disposition": f'attachment; filename="{report.batch_id}_raporu.pdf"',
             "Content-Length": str(len(pdf)),
             "Cache-Control": "no-store",
         },

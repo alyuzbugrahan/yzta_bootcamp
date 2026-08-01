@@ -41,7 +41,7 @@ from app.main import create_app
 
 
 def _database_url(tmp_path) -> str:
-    return os.getenv("FIGION_TEST_DATABASE_URL") or f"sqlite+aiosqlite:///{tmp_path}/ws.db"
+    return os.getenv("AGROVISION_TEST_DATABASE_URL") or f"sqlite+aiosqlite:///{tmp_path}/ws.db"
 
 
 async def _reset(url: str) -> None:

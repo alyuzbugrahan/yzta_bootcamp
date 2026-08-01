@@ -103,6 +103,9 @@ class SessionReport:
     is_open: bool
     throughput: Throughput
     analysis: ModelAnalysis
+    count_source: str = "model"
+    manual_counts_applied: bool = False
+    fig_weight_g: float | None = None
     notes: list[str] = field(default_factory=list)
 
 
@@ -210,10 +213,16 @@ def build_throughput(
     ended_at: datetime | None,
     now: datetime,
     fig_weight_g: float | None = None,
+    total_count_override: int | None = None,
+    defect_count_override: int | None = None,
 ) -> Throughput:
-    total = len(metrics)
-    aflatoxin = sum(1 for m in metrics if m.decision == DECISION_AFLATOXIN)
-    healthy = sum(1 for m in metrics if m.decision == DECISION_HEALTHY)
+    detected_total = len(metrics)
+    detected_aflatoxin = sum(1 for m in metrics if m.decision == DECISION_AFLATOXIN)
+    total = total_count_override if total_count_override is not None else detected_total
+    aflatoxin = (
+        defect_count_override if defect_count_override is not None else detected_aflatoxin
+    )
+    healthy = max(total - aflatoxin, 0)
 
     # An open session is measured to now, so a live report shows a meaningful rate rather than
     # dividing by zero.
@@ -280,8 +289,20 @@ def build_session_report(
     metrics: list[InspectionMetric],
     now: datetime,
     fig_weight_g: float | None = None,
+    total_count_override: int | None = None,
+    defect_count_override: int | None = None,
+    count_source: str = "model",
+    manual_counts_applied: bool = False,
 ) -> SessionReport:
-    throughput = build_throughput(metrics, started_at, ended_at, now, fig_weight_g)
+    throughput = build_throughput(
+        metrics,
+        started_at,
+        ended_at,
+        now,
+        fig_weight_g,
+        total_count_override=total_count_override,
+        defect_count_override=defect_count_override,
+    )
     analysis = build_analysis(metrics, conf_threshold_used)
 
     return SessionReport(
@@ -292,5 +313,8 @@ def build_session_report(
         is_open=ended_at is None,
         throughput=throughput,
         analysis=analysis,
+        count_source=count_source,
+        manual_counts_applied=manual_counts_applied,
+        fig_weight_g=fig_weight_g,
         notes=build_notes(throughput, analysis),
     )

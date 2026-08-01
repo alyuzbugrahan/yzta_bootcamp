@@ -45,6 +45,7 @@ class SessionService:
         user_id: int,
         conf_threshold: float,
         device_label: str | None = None,
+        fig_weight_g: float | None = None,
     ) -> ScanSession:
         """Open a new session for this user."""
         return await self._sessions.create(
@@ -52,6 +53,7 @@ class SessionService:
             batch_id=build_batch_id(),
             conf_threshold=conf_threshold,
             device_label=device_label,
+            fig_weight_g=fig_weight_g,
         )
 
     async def stop(
@@ -96,6 +98,32 @@ class SessionService:
         self, scan_session: ScanSession, limit: int = 50, before_seq: int | None = None
     ) -> list[Inspection]:
         return await self._inspections.list_for_session(scan_session.id, limit, before_seq)
+
+    async def update_metadata(
+        self,
+        user_id: int,
+        session_uuid: uuid_module.UUID,
+        *,
+        batch_id: str,
+        device_label: str | None,
+        total_count: int | None = None,
+        defect_count: int | None = None,
+        fig_weight_g: float | None = None,
+    ) -> ScanSession | None:
+        return await self._sessions.update_metadata(
+            user_id,
+            session_uuid,
+            batch_id=batch_id,
+            device_label=device_label,
+            total_count=total_count,
+            defect_count=defect_count,
+            fig_weight_g=fig_weight_g,
+        )
+
+    async def first_image_key(
+        self, user_id: int, session_uuid: uuid_module.UUID
+    ) -> str | None:
+        return await self._sessions.first_image_key(user_id, session_uuid)
 
     async def delete(self, user_id: int, session_uuid: uuid_module.UUID) -> bool:
         return await self._sessions.delete(user_id, session_uuid)

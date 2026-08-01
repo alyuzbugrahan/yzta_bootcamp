@@ -92,11 +92,11 @@ async def test_image_key_becomes_an_api_url(sessions, inspections, farmer, db):
 
     text = await collect(
         sessions.iter_export_rows(farmer.id, scan.uuid),
-        image_url_base="https://figion.example/api/v1",
+        image_url_base="https://agrovision.example/api/v1",
     )
     row = list(csv.reader(io.StringIO(text.lstrip(BOM))))[1]
 
-    assert row[6] == f"https://figion.example/api/v1/inspections/{recorded.id}/image"
+    assert row[6] == f"https://agrovision.example/api/v1/inspections/{recorded.id}/image"
 
 
 async def test_missing_image_key_is_blank(sessions, inspections, farmer, db):

@@ -6,6 +6,6 @@
 set -eu
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-SQL
-    SELECT 'CREATE DATABASE figion'
-    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'figion')\gexec
+    SELECT 'CREATE DATABASE agrovision'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'agrovision')\gexec
 SQL

@@ -5,10 +5,10 @@ singleton that silently ignored its ``config_path`` argument after first constru
 which made it impossible to instantiate with different values in a test. Settings are
 now plain immutable models built from the environment.
 
-Environment variables use the ``FIGION_`` prefix and ``__`` for nesting::
+Environment variables use the ``AGROVISION_`` prefix and ``__`` for nesting::
 
-    FIGION_MODEL__CONF_THRESHOLD=0.6
-    FIGION_VISION__MIN_AREA_RATIO=0.01
+    AGROVISION_MODEL__CONF_THRESHOLD=0.6
+    AGROVISION_VISION__MIN_AREA_RATIO=0.01
 """
 
 from __future__ import annotations
@@ -110,7 +110,7 @@ class DatabaseSettings(BaseModel):
     ``SUM(decision = 'Aflatoxin')`` was, and is replaced by ``COUNT(*) FILTER``.
     """
 
-    url: str = "sqlite+aiosqlite:///./figion.db"
+    url: str = "sqlite+aiosqlite:///./agrovision.db"
     echo: bool = False
 
 
@@ -127,7 +127,7 @@ class StorageSettings(BaseModel):
     root: str = "data/images"
 
     # s3 / MinIO
-    bucket: str = "figion-images"
+    bucket: str = "agrovision-images"
     endpoint_url: str = ""
     region: str = "us-east-1"
     access_key: str = ""
@@ -143,6 +143,25 @@ class StorageSettings(BaseModel):
     # Turning this off keeps decisions and statistics while storing no images at all — the
     # cheapest answer to the retention question if evidence is not needed.
     enabled: bool = True
+
+
+class RagSettings(BaseModel):
+    """Retrieval-augmented assistant configuration.
+
+    The bundled Chroma store is loaded lazily on the first RAG request so normal scanning
+    startup stays fast and the application can still run when the optional RAG extra is not
+    installed. Relative paths are resolved against the backend project directory.
+    """
+
+    enabled: bool = True
+    vector_store_path: str = "rag_assets/incir_vektor_deposu_v2"
+    sources_path: str = "rag_assets/veri_havuzu"
+    collection_name: str = "langchain"
+    embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    llm_model: str = "gemini-3.5-flash"
+    api_key: str = ""
+    search_k: int = Field(default=6, ge=1, le=12)
+    max_question_length: int = Field(default=1000, ge=20, le=5000)
 
 
 class AuthSettings(BaseModel):
@@ -192,13 +211,13 @@ class SecuritySettings(BaseModel):
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="FIGION_",
+        env_prefix="AGROVISION_",
         env_nested_delimiter="__",
         env_file=".env",
         extra="ignore",
     )
 
-    app_name: str = "Figion"
+    app_name: str = "AgroVision"
     app_version: str = "0.1.0"
     environment: Literal["dev", "staging", "prod"] = "dev"
     log_level: str = "INFO"
@@ -212,6 +231,7 @@ class Settings(BaseSettings):
     vision: VisionSettings = VisionSettings()
     timing: TimingSettings = TimingSettings()
     ingest: IngestSettings = IngestSettings()
+    rag: RagSettings = RagSettings()
 
     cors_origins: list[str] = []
 
@@ -223,7 +243,7 @@ class Settings(BaseSettings):
     def _reject_dev_secret(self) -> Settings:
         if self.environment != "dev" and self.auth.secret_key == DEV_SECRET_KEY:
             raise ValueError(
-                "FIGION_AUTH__SECRET_KEY must be set outside the dev environment; "
+                "AGROVISION_AUTH__SECRET_KEY must be set outside the dev environment; "
                 "the default key is public and would let anyone forge a token."
             )
         return self
@@ -235,7 +255,7 @@ class Settings(BaseSettings):
         catching at boot rather than as a confusing CORS failure in the frontend."""
         if self.environment != "dev" and "*" in self.cors_origins:
             raise ValueError(
-                "FIGION_CORS_ORIGINS must name explicit origins outside dev, not '*'."
+                "AGROVISION_CORS_ORIGINS must name explicit origins outside dev, not '*'."
             )
         return self
 

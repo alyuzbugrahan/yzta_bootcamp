@@ -4,7 +4,7 @@ Without this, ``Base.metadata.create_all`` (used by the repository fixtures) and
 ``alembic upgrade`` (used in production) drift apart, and the suite passes against a schema that
 never ships.
 
-Runs against ``FIGION_TEST_DATABASE_URL`` when set, so CI exercises the real PostgreSQL
+Runs against ``AGROVISION_TEST_DATABASE_URL`` when set, so CI exercises the real PostgreSQL
 migration path rather than only the SQLite one.
 
 Synchronous by design: ``alembic/env.py`` calls ``asyncio.run``, which cannot be nested inside a
@@ -40,7 +40,7 @@ def alembic_config() -> Config:
 
 
 def target_url(tmp_path) -> str:
-    return os.getenv("FIGION_TEST_DATABASE_URL") or f"sqlite+aiosqlite:///{tmp_path}/mig.db"
+    return os.getenv("AGROVISION_TEST_DATABASE_URL") or f"sqlite+aiosqlite:///{tmp_path}/mig.db"
 
 
 async def _wipe(url: str) -> None:
@@ -93,7 +93,7 @@ def migrated(tmp_path, monkeypatch) -> str:
     """Apply every migration to a clean database and return its URL."""
     url = target_url(tmp_path)
 
-    monkeypatch.setenv("FIGION_DATABASE__URL", url)
+    monkeypatch.setenv("AGROVISION_DATABASE__URL", url)
     get_settings.cache_clear()
 
     asyncio.run(_wipe(url))
@@ -130,7 +130,7 @@ def test_migrations_apply_to_a_table_that_already_has_rows(tmp_path, monkeypatch
     passed it straight through to a deployment.
     """
     url = target_url(tmp_path)
-    monkeypatch.setenv("FIGION_DATABASE__URL", url)
+    monkeypatch.setenv("AGROVISION_DATABASE__URL", url)
     get_settings.cache_clear()
 
     asyncio.run(_wipe(url))

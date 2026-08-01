@@ -1,11 +1,11 @@
 """Database fixtures.
 
-Runs against ``FIGION_TEST_DATABASE_URL`` when set, otherwise a throwaway SQLite file.
+Runs against ``AGROVISION_TEST_DATABASE_URL`` when set, otherwise a throwaway SQLite file.
 
 PostgreSQL is the deployment target, and these tests are written to be dialect-agnostic so the
 same suite can be pointed at it in CI::
 
-    FIGION_TEST_DATABASE_URL=postgresql+asyncpg://figion:figion@localhost/figion_test pytest
+    AGROVISION_TEST_DATABASE_URL=postgresql+asyncpg://agrovision:agrovision@localhost/agrovision_test pytest
 
 The two features the port depends on — ``COUNT(*) FILTER`` and ``INSERT ... RETURNING`` — are
 supported by both PostgreSQL and SQLite 3.35+, which is what makes that possible.
@@ -29,7 +29,7 @@ from app.services.session_service import SessionService
 
 
 def database_url(tmp_path) -> str:
-    configured = os.getenv("FIGION_TEST_DATABASE_URL")
+    configured = os.getenv("AGROVISION_TEST_DATABASE_URL")
     if configured:
         return configured
     return f"sqlite+aiosqlite:///{tmp_path}/test.db"

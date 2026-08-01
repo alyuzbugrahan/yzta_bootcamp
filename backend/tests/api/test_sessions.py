@@ -6,7 +6,7 @@ import uuid as uuid_module
 async def test_create_session(client, farmer):
     response = await client.post(
         "/api/v1/sessions",
-        json={"conf_threshold": 0.62, "device_label": "Barn cam"},
+        json={"conf_threshold": 0.62, "device_label": "Barn cam", "fig_weight_g": 20},
         headers=farmer.headers,
     )
 
@@ -15,6 +15,8 @@ async def test_create_session(client, farmer):
     assert body["batch_id"].startswith("BATCH_")
     assert body["conf_threshold"] == 0.62
     assert body["device_label"] == "Barn cam"
+    assert body["fig_weight_g"] == 20
+    assert body["total_kg"] == 0
     assert body["is_open"] is True
     assert body["ws_url"] == f"/api/v1/ws/scan/{body['uuid']}"
 
@@ -156,3 +158,77 @@ async def test_inspections_listing_is_empty_for_a_new_session(client, farmer, op
 
     assert response.status_code == 200
     assert response.json()["items"] == []
+
+
+async def test_completed_session_metadata_can_be_corrected(client, farmer, open_session):
+    await client.post(
+        f"/api/v1/sessions/{open_session['uuid']}/stop", headers=farmer.headers
+    )
+
+    response = await client.patch(
+        f"/api/v1/sessions/{open_session['uuid']}",
+        json={
+            "batch_id": "BATCH_CORRECTED",
+            "device_label": "North camera",
+            "total_count": 12,
+            "defect_count": 2,
+            "fig_weight_g": 25,
+        },
+        headers=farmer.headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["batch_id"] == "BATCH_CORRECTED"
+    body = response.json()
+    assert body["device_label"] == "North camera"
+    assert body["total_count"] == 12
+    assert body["defect_count"] == 2
+    assert body["detected_total_count"] == 0
+    assert body["fig_weight_g"] == 25
+    assert body["total_kg"] == 0.3
+    assert body["is_manually_corrected"] is True
+
+
+async def test_open_session_metadata_cannot_be_changed(client, farmer, open_session):
+    response = await client.patch(
+        f"/api/v1/sessions/{open_session['uuid']}",
+        json={"batch_id": "BATCH_CORRECTED", "device_label": None},
+        headers=farmer.headers,
+    )
+
+    assert response.status_code == 409
+
+
+async def test_session_batch_id_rejects_storage_unsafe_characters(
+    client, farmer, open_session
+):
+    await client.post(
+        f"/api/v1/sessions/{open_session['uuid']}/stop", headers=farmer.headers
+    )
+
+    response = await client.patch(
+        f"/api/v1/sessions/{open_session['uuid']}",
+        json={"batch_id": "../../bad", "device_label": None},
+        headers=farmer.headers,
+    )
+
+    assert response.status_code == 422
+
+
+async def test_session_correction_rejects_defects_above_total(client, farmer, open_session):
+    await client.post(
+        f"/api/v1/sessions/{open_session['uuid']}/stop", headers=farmer.headers
+    )
+
+    response = await client.patch(
+        f"/api/v1/sessions/{open_session['uuid']}",
+        json={
+            "batch_id": "BATCH_CORRECTED",
+            "device_label": None,
+            "total_count": 2,
+            "defect_count": 3,
+        },
+        headers=farmer.headers,
+    )
+
+    assert response.status_code == 422

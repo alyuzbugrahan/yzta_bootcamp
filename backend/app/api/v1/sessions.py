@@ -21,6 +21,7 @@ from app.api.v1.schemas import (
     SessionResponse,
     SummaryResponse,
     TicketResponse,
+    UpdateSessionRequest,
 )
 from app.core.errors import ApiError, ErrorCode, NotFound
 from app.core.logging import get_logger
@@ -73,7 +74,12 @@ async def create_session(
         else settings.model.conf_threshold
     )
 
-    scan = await service.start(user.id, conf_threshold=conf, device_label=payload.device_label)
+    scan = await service.start(
+        user.id,
+        conf_threshold=conf,
+        device_label=payload.device_label,
+        fig_weight_g=payload.fig_weight_g,
+    )
 
     # Committed before responding: the client opens a WebSocket against this session as soon
     # as it has the uuid, and that runs on a different database session.
@@ -82,7 +88,7 @@ async def create_session(
     log.info("session_started", user_id=user.id, batch_id=scan.batch_id)
 
     return SessionCreatedResponse(
-        **SessionResponse.model_validate(scan).model_dump(),
+        **SessionResponse.from_session(scan).model_dump(),
         ws_url=_ws_url(scan.uuid),
     )
 
@@ -113,7 +119,7 @@ async def stop_session(
     log.info("session_stopped", user_id=user.id, total=closed.total_count)
 
     return SessionDetailResponse(
-        session=SessionResponse.model_validate(closed),
+        session=SessionResponse.from_session(closed),
         summary=SummaryResponse.from_summary(summary),
     )
 
@@ -168,9 +174,58 @@ async def list_sessions(
     page = rows[:limit]
 
     return SessionPage(
-        items=[SessionResponse.model_validate(row) for row in page],
+        items=[SessionResponse.from_session(row) for row in page],
         next_cursor=page[-1].id if has_more and page else None,
     )
+
+
+@router.patch("/sessions/{session_uuid}", response_model=SessionResponse)
+async def update_session(
+    session_uuid: uuid_module.UUID,
+    payload: UpdateSessionRequest,
+    user: CurrentUser,
+    service: SessionServiceDep,
+    db: DbSession,
+) -> SessionResponse:
+    """Correct user-editable metadata for a completed scan.
+
+    Batch metadata and displayed totals can be corrected. Detector rows and raw detector
+    counters remain immutable, so exports still preserve the original model evidence.
+    """
+    scan = await service.get(user.id, session_uuid)
+    if scan is None:
+        raise NotFound("Session not found")
+
+    if scan.is_open:
+        raise ApiError(
+            ErrorCode.VALIDATION_ERROR,
+            "An open scanning session cannot be edited",
+            status.HTTP_409_CONFLICT,
+        )
+
+    try:
+        updated = await service.update_metadata(
+            user.id,
+            session_uuid,
+            batch_id=payload.batch_id,
+            device_label=payload.device_label,
+            total_count=payload.total_count,
+            defect_count=payload.defect_count,
+            fig_weight_g=payload.fig_weight_g,
+        )
+    except ValueError as exc:
+        raise ApiError(
+            ErrorCode.VALIDATION_ERROR,
+            str(exc),
+            status.HTTP_409_CONFLICT,
+        ) from exc
+
+    if updated is None:
+        raise NotFound("Session not found")
+
+    await db.commit()
+    log.info("session_updated", user_id=user.id, session_uuid=str(session_uuid))
+    return SessionResponse.from_session(updated)
 
 
 @router.get("/sessions/{session_uuid}", response_model=SessionDetailResponse)
@@ -186,7 +241,7 @@ async def get_session(
     summary = await service.summary(user.id, session_uuid)
 
     return SessionDetailResponse(
-        session=SessionResponse.model_validate(scan),
+        session=SessionResponse.from_session(scan),
         summary=SummaryResponse.from_summary(summary),
     )
 
@@ -232,7 +287,14 @@ async def delete_session(
     if scan is None:
         raise NotFound("Session not found")
 
-    batch_id = scan.batch_id
+    # If the user renamed the batch, archived image keys still contain the original batch
+    # segment. Recover the real prefix from one image so deletion does not leave orphaned files.
+    first_image_key = await service.first_image_key(user.id, session_uuid)
+    storage_prefix = (
+        f"{first_image_key.rsplit('/', 1)[0]}/"
+        if first_image_key
+        else session_prefix(user.id, scan.batch_id)
+    )
 
     if not await service.delete(user.id, session_uuid):
         raise NotFound("Session not found")
@@ -244,7 +306,7 @@ async def delete_session(
     storage = request.app.state.storage
     removed = 0
     if storage is not None:
-        removed = await storage.delete_prefix(session_prefix(user.id, batch_id))
+        removed = await storage.delete_prefix(storage_prefix)
 
     log.info(
         "session_deleted",

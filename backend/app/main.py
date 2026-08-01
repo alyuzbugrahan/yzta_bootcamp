@@ -8,11 +8,14 @@ state is built per WebSocket in :mod:`app.services.scan_service` (Phase 4).
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
-from app.api.v1 import auth, exports, health, images, reports, sessions, ws_scan
+from app.api.v1 import auth, exports, health, images, rag, reports, sessions, ws_scan
 from app.config import Settings, get_settings
 from app.core.errors import install_error_handlers
 from app.core.logging import configure_logging, get_logger
@@ -23,11 +26,13 @@ from app.infra.db.session import create_engine, create_session_factory
 from app.infra.detector_provider import build_detector
 from app.infra.model_pool import InferencePool
 from app.infra.storage.provider import build_storage
+from app.services.rag_service import RagService
 from app.services.scan_service import ConnectionRegistry
 
 log = get_logger(__name__)
 
 API_PREFIX = "/api/v1"
+FRONTEND_DIR = Path(__file__).resolve().parents[1] / "frontend"
 
 
 @asynccontextmanager
@@ -45,6 +50,7 @@ async def lifespan(app: FastAPI):
     # Bounds how many frames are in inference at once across every connected farmer.
     app.state.inference_pool = InferencePool(settings.max_concurrent_inferences)
     app.state.connection_registry = ConnectionRegistry()
+    app.state.rag_service = RagService(settings.rag)
 
     app.state.storage = build_storage(settings)
     if app.state.storage is not None:
@@ -82,6 +88,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.connection_registry = None
     app.state.storage = None
     app.state.archiver = None
+    app.state.rag_service = None
     app.state.trust_proxy_headers = settings.security.trust_proxy_headers
 
     app.state.auth_limiter = TokenBucketLimiter(
@@ -114,9 +121,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         exports.router,
         reports.router,
         images.router,
+        rag.router,
         ws_scan.router,
     ):
         app.include_router(router, prefix=API_PREFIX)
+
+    if FRONTEND_DIR.is_dir():
+        static_dir = FRONTEND_DIR / "static"
+        if static_dir.is_dir():
+            app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+        @app.get("/", include_in_schema=False)
+        async def frontend_index() -> FileResponse:
+            return FileResponse(FRONTEND_DIR / "index.html")
 
     return app
 

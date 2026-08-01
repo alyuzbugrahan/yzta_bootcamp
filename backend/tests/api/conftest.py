@@ -1,6 +1,6 @@
 """API fixtures.
 
-Uses the same database wiring as the persistence suite, so ``FIGION_TEST_DATABASE_URL`` points
+Uses the same database wiring as the persistence suite, so ``AGROVISION_TEST_DATABASE_URL`` points
 these tests at PostgreSQL too.
 """
 
@@ -21,7 +21,7 @@ from app.main import create_app
 
 
 def database_url(tmp_path) -> str:
-    return os.getenv("FIGION_TEST_DATABASE_URL") or f"sqlite+aiosqlite:///{tmp_path}/api.db"
+    return os.getenv("AGROVISION_TEST_DATABASE_URL") or f"sqlite+aiosqlite:///{tmp_path}/api.db"
 
 
 @pytest.fixture

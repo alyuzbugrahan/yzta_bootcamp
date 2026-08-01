@@ -298,6 +298,30 @@ def test_session_report_assembles():
     assert sum(b.count for b in report.analysis.confidence_histogram) == 100
 
 
+
+def test_session_report_can_use_user_count_overrides():
+    report = build_session_report(
+        batch_id="BATCH_MANUAL",
+        device_label="Barn cam",
+        started_at=START,
+        ended_at=START + timedelta(minutes=5),
+        conf_threshold_used=0.5,
+        metrics=batch(healthy=8, aflatoxin=2),
+        now=START,
+        fig_weight_g=20.0,
+        total_count_override=12,
+        defect_count_override=3,
+        count_source="user",
+        manual_counts_applied=True,
+    )
+
+    assert report.throughput.total_figs == 12
+    assert report.throughput.healthy_count == 9
+    assert report.throughput.aflatoxin_count == 3
+    assert report.throughput.estimated_mass_g == 240.0
+    assert report.count_source == "user"
+    assert report.manual_counts_applied is True
+
 def test_open_session_report_is_marked_open():
     report = build_session_report(
         batch_id="BATCH_LIVE",

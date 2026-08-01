@@ -234,3 +234,57 @@ async def test_conf_threshold_is_snapshotted(sessions, farmer):
     found = await sessions.get(farmer.id, scan.uuid)
 
     assert found.conf_threshold == pytest.approx(0.73)
+
+
+async def test_completed_session_metadata_can_be_updated(sessions, farmer, db):
+    scan = await sessions.create(farmer.id, "BATCH_OLD", 0.5, "Old camera")
+    await sessions.close(farmer.id, scan.uuid)
+
+    updated = await sessions.update_metadata(
+        farmer.id,
+        scan.uuid,
+        batch_id="BATCH_NEW",
+        device_label="New camera",
+        total_count=10,
+        defect_count=3,
+    )
+    await db.commit()
+
+    assert updated.batch_id == "BATCH_NEW"
+    assert updated.device_label == "New camera"
+    assert updated.total_count == 0
+    assert updated.defect_count == 0
+    assert updated.effective_total_count == 10
+    assert updated.effective_defect_count == 3
+    assert updated.is_manually_corrected
+
+
+async def test_range_totals_use_session_aggregates(
+    sessions, inspections, farmer, db
+):
+    from datetime import UTC, datetime, timedelta
+
+    scan = await sessions.create(farmer.id, "BATCH_RANGE", 0.5)
+    await inspections.record(scan.id, result("Healthy", confidence=0.8))
+    await inspections.record(scan.id, result("Aflatoxin", confidence=0.6))
+    await sessions.update_metadata(
+        farmer.id,
+        scan.uuid,
+        batch_id=scan.batch_id,
+        device_label=None,
+        total_count=5,
+        defect_count=2,
+    )
+    await db.commit()
+
+    now = datetime.now(UTC)
+    totals = await sessions.totals_between(
+        farmer.id,
+        now - timedelta(days=1),
+        now + timedelta(days=1),
+    )
+
+    assert totals.total_figs == 5
+    assert totals.healthy_count == 3
+    assert totals.aflatoxin_count == 2
+    assert totals.mean_confidence == pytest.approx(0.7)

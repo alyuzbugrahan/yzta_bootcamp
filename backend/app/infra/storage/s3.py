@@ -35,7 +35,7 @@ class S3Storage:
             from botocore.config import Config
         except ImportError as exc:  # pragma: no cover - depends on optional extra
             raise StorageError(
-                "S3 storage requires boto3: pip install 'figion-backend[s3]'"
+                "S3 storage requires boto3: pip install 'agrovision-backend[s3]'"
             ) from exc
 
         self._bucket = bucket

@@ -192,3 +192,18 @@ async def test_concurrent_records_do_not_duplicate_sequences(engine, farmer):
     successful = [s for s in sequences if isinstance(s, int)]
 
     assert len(successful) == len(set(successful)), f"duplicate fig_seq: {successful}"
+
+
+async def test_record_updates_lightweight_session_aggregates(
+    sessions, inspections, farmer, db
+):
+    scan = await sessions.create(farmer.id, "BATCH_AGG", 0.5)
+
+    await inspections.record(scan.id, result("Healthy", confidence=0.8))
+    await inspections.record(scan.id, result("Aflatoxin", confidence=0.6))
+    await db.flush()
+    await db.refresh(scan)
+
+    assert scan.total_count == 2
+    assert scan.defect_count == 1
+    assert scan.avg_confidence == pytest.approx(0.7)

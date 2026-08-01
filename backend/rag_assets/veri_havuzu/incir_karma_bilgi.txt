@@ -1,0 +1,145 @@
+Türkiye Aflatoksin Limitleri
+
+B1 ; 8,0 μg/ kg
+
+B1+B2+G1+G2 ;  10 μg/ kg
+
+AB Aflatoksin Limitleri
+
+B1 ; 6,0 μg/ kg
+
+B1+B2+G1+G2 ;  10 μg/ kg
+
+
+Aspergillus türü küfler doğada çok yaygın bulunduğu için bitki koruma mücadele yöntemleri ya etkili olmamakta ya da hasat tarihine yakın dönemlerde olduğu için kimyasal mücadele yapılamamaktadır. İncirde ise aflatoksinin kaynağı olarak hatalı ilekleme, uygun olmayan depolama şartları, hasat ve kurutmanın uzun sürmesi gösterilebilir. Kuru incirin geleneksel üretim tekniği ve meyve yapısı gereği ostiol açıklığının bulunmasından dolayı üretiminde tüm iyi tarım uygulamaları uygulansa dahi bazen aflatoksin oluşumu engellenememektedir. Böyle durumlarda aflatoksinli incirlerin işletme koşullarında seçilerek ayıklanması en etkin yöntemdir. Küf mantarları aflatoksin oluştururken yan ürün olarak kojik asit üretmektedirler. Kojik asit, karanlık ortamda uzun dalga boylu (365nm) Ultra Viole (UV) lambaları altında parlak yeşilimsi sarı ışıma yapmaktadır. Aflatoksin, sadece UV lamba altında yeşilimsi sarı renkte floresans renk veren incirlerin ayıklanması ile temizlenebilmekte olup normal ortamda gözle görülmesi mümkün değildir. Meyve yüzeyinde veya içerisinde oluşan aflatoksinin çeşitli yöntemler ile parçalanması (detoksifikasyon) ise incir meyvesi için çoğunlukla mümkün olmamakla beraber dünyada ve ülkemizde yasak bir uygulamadır. Aflatoksinin parçalanabilmesi için gerekli olan sıcaklık 300ᵒC civarında olup pişirmek, dondurmak, ilaçlamak gibi farklı uygulamalar ile yok edilmesi de mümkün değildir. Yapılan araştırmalar sonucunda karanlık oda şartlarında seçilen incirlerin yaklaşık %0,6-1,2sinde ışıma yapan meyve olduğu ortaya konulmuş olup bunların ayıklanması inciri güvenli bir besin kaynağı haline getirmektedir. Aflatoksin bulunsa dahi belirli limitlerle izin verilen gıdalar dünyada ve ülkemizde vardır. İncir ve diğer çoğu meyvede bu sınır değerler genellikle aflatoksin B1 için 6ppb, toplam aflatoksin için 10ppb’dir. Ayrıca incirlerin ışıma yapmış olması sınır değerlerin üzerinde aflatoksin içeriyor anlamına gelmemektedir. Araştırma sonuçları göstermektedir ki ışıma yapmayıp temiz diye ayıklanan incirler %100’e yakın oranda temiz çıkar iken ışıma yapıp aflatoksinli diye ayıklanan incirlerin ise sadece %50-60’ında sınır değerlerin üzerinde aflatoksin tespit edilmiştir. Sonuç olarak incirde aflatoksin bulunma riski günlük diyetimizde çok fazla yer alan tahıl, hububat ve hazır gıdalardaki aflatoksin riskine göre daha düşük seviyelerdedir. Tüm gıda maddeleri için yaptığımız öneri; ambalajlı ve üretim izni olan ürünler yaşam desteğiniz olsun.  
+
+
+Küflerin bulaşmasından sonra diğer koşullarda uygun ise, aflatoksin oluşumu 3-5 gün
+içerisinde ortaya çıkabilmektedir.
+Aflatoksinle bulaşık kuru incirlerin çıplak gözle seçilip ayrılması mümkün değildir.
+Aflatoksin oluşturan mantarların, bazı ürünlerde uzun dalga mor ötesi ışık altında (360 nm)
+parlak yeşilimsi-sarı ışıma yapan bir başka sekonder metabolizma ürünü olan kojik asidi de
+oluşturduğu saptanmıştır. Meyvelerdeki olası aflatoksin mevcudiyeti, kojik asidin varlığı ile
+belirti gösterebilmekte dolayısıyla işletmelerde, UV ışık altında yapılan gözlemler sonucunda
+ışıma yapan incirler ayrılmaktadır.
+
+Aflatoksin oluşumunun önlenmesi amacıyla hasat öncesinde, hasatta, hasat sonunda ve
+depolarda çeşitli önlemler alınmalıdır.
+Hasat öncesi:
+• Bahçeler tesis edilirken sıra arası ve sıra üzeri mesafelere dikkat edilmeli ve bu sayede
+hava akımına olanak vererek küf gelişimi engellenmelidir.
+ İncir meyvelerinin kuruma süresini uzatarak aflatoksin riskini arttıran aşırı azotlu
+gübrelemeden kaçınılmalı; yaprak ve toprak analizlerine göre gübreleme yapılmalıdır.
+• Yanlış budamalar sonucu ortaya çıkan dal ve meyvelerde güneş yanıklıkları, verim ve
+kaliteyi düşürerek, aflatoksin oluşum riskini arttırdığından; yeterli güneşlenme ve
+havalanmaya olanak veren doğru bir budama yapılmalıdır.
+• Küf sporlarının yayılmasını tetiklemesinden dolayı; hasat öncesi toz kalkmasına neden
+olan toprak işlemeden kaçılmalıdır.
+• Sulama yapılan bahçelerde suyun meyve veya yapraklarla teması engellenmelidir.
+Hastalık, zararlı ve yabancı otlarla mücadele edilmeli, özellikle hasat öncesi ağaç altı
+temizliğin yapılması ve bitki artıklarının bahçeden uzaklaştırılarak mantari bulaşmaların
+azaltılması sağlanmalıdır.
+• Başta ekşilik böceği ve sirke sineği olmak üzere zararlılarla mekanik mücadele mutlaka
+ve komşu bahçelerde de olacak şekilde yapılmalıdır.
+Hasatta:
+• Erken hasattan kaçınılmalı, hasat zamanının belirlenmesi için gerekli kriterlere dikkat
+edilmelidir. Bahçede birden fazla çeşit varsa bunlar olgunluk sırasına göre ayrı ayrı hasat
+edilmelidir.
+• Henüz buruk ve yüksek oranda su içeren incirlerin düştüklerinde zedelenerek küf
+bulaşıklığına maruz kalmamaları amacıyla, toprak yüzeyinin düzgün ve otsuz olması
+sağlanmalıdır.
+• Hasadın, kerevette kuruma süresini uzatacağı için sırıklama ve tırnaklama ile ve tam
+olarak buruklaşmadan yapılmamalıdır (Şekil 54).
+• Sık hasat yapılarak, toprak kaynaklı küflerin bulaşma riskini azaltılabilmek için incirlerin
+mümkün olduğunca en kısa sürede toprakla teması kesilmelidir. Mümkünse buruk
+meyvelerin hasadı toprak yüzeyinden değil, tercihen, filelerin üzerine düşmesini
+sağlayarak yapılmalıdır (Şekil 55).
+• Kullanılan toplama kapları ve kerevetlerin, ürüne zarar vermeyecek yapıda ve temiz
+olması sağlanmalıdır.
+• Kurutma aşamasında, toprak ve bitki sapları üzerine serilen incirlerin böcek, küf ve
+yabancı madde ile bulaşma riski çok fazla olduğundan, incirler mutlaka kerevetler
+üzerine serilerek kurutulmalıdır (Şekil 56a-b).
+• Hurda ve bulaşık incirler ayrı kaplara toplanmalı, ayrı alanda kurutulmalıdır. Böylece
+temiz incirlerin küf ve aflatoksinle bulaşma riski engellenmelidir.
+•Toprağın üzerinde çürüyen meyveler ve kalıntılar aflatoksin oluşturan küflere yataklık
+yaptığı için toplanıp bahçe dışında imha edilmelidir.
+Hasat sonrası:
+Hasat sonrası işlemler aflatoksin gelişiminde en önemli aşamadır. Bu nedenle kurutma
+işlemlerinin en kısa sürede gerçekleştirilmesi gerekmektedir.
+• Geceleri kerevetlerin üstü mutlaka kapatılmalı ve terleme yapmasını engellemek için
+sabah erken saatlerde hemen açılmalıdır. Terleme veya kurutma aşamasında çiğ düşmesi
+ile incirin üzerine su damlacıklarının oluşması küf gelişimini arttıracağı gibi aflatoksin
+riskini arttırır, ürün kalitesini bozar ve kararmaya yol açar.
+ Sergi alanı dışarıdan zararlıların bulaşmasını engelleyen ancak yeterince havalanmayı
+sağlayabilen iki tarafı file veya telle örtülmüş plastik tüneller kuruma hızını arttıracağı
+için aflatoksin oluşum riskini azaltır (Şekil 56a-b).
+• Sergiden incir toplama işlemi sabah serin saatlerde yapılmalıdır. Aksi takdirde sıcakta
+yumuşayan incirlerin yeterince kuruyup kurumadığını anlamak zorlaşır.
+• Sergiden kuru incir alma işlemi, bu işte deneyimli kişiler tarafından yapılmalıdır. Bu
+işlemin sürekli aynı kişiler tarafından yapılmasında yarar vardır veya bahçe sahibi
+tarafından eğitim verilmelidir.
+• Yeterince kurumayan incir kerevetten alınmamalıdır. Sergiye konmadan önce %30-50
+nem içeren incirler sergide %20-22 neme kadar kurutulmalıdır.
+Depolama:
+• Depolar güneş almayan serin yerlerde kurulmalı, kuru, havalanabilen ve kokusuz
+ortamlar olmalıdır.
+• İncirler depoda mutlaka kasa içerisinde yüksek yığın oluşturmadan muhafaza edilmelidir
+(Şekil 57a-b).
+• Depoya henüz kurumamış incirler konulmamalıdır. Hurda incirler ayrı yerde
+depolanmalıdır.
+• Üretici tarafından kalite sınıflarına ayrılan kuru incirler, temiz kasalarda alıcılara hızla
+teslim edilmelidir.
+Kimyasal mücadele
+Ülkemizde bu hastalığa karşı ruhsatlı bir fungisit bulunmayıp herhangi bir kimyasal
+mücadele önerilmemektedir.
+
+İncir üretiminde en önemli sorunlardan birisi de küf ve mayaların neden olduğu İncir iç
+çürüklüğü hastalığı ve aflatoksin oluşumu nedeniyle meyvelerdeki kalite kayıplarıdır.
+Bunların mücadelesinde sağlıklı ilek kullanılması ön koşul olup, ekşilik böcekleri ile etkili
+mücadelenin yaygın bir şekilde desteklenmesi, ilekleme işleminin yeterli düzeyde yapılarak
+aşırıdan kaçınılması çok önemlidir. Tozlama işleminde erkek incir ağaçlarından koparılıp
+getirilen ilek meyvelerinin ilekleme işleminden sonra asıldıkları dişi incir ağaçlarından
+toplanması, üretim sezonu içerisinde ve sonrasında ekşimiş, bozulmuş, çürümüş meyvelerin
+bahçede bırakılmaması dikkat edilmesi gereken önlemlerdendir.
+Büyük risk unsurlarından olan aflatoksin oluşumunu engellemek için, taşıyıcı vektörlerle
+mücadele, meyvelerin düştüğü zeminin düzgün olması hatta toprakla temasın engelleneceği
+örtülü hasat tekniğinin kullanılması, kurutmanın doğru yapılması gibi kültürel önlemler
+uygulanmak zorundadır. Bunların yanı sıra hurda incirlerin hasat, kurutma ve depolama
+sürecinde ayrı ayrı tutulması, meyvelerin temiz depolarda, kasalar içerisinde, yüksek yığınlar yapmaksızın muhafaza edilmesi gerekirken; kurtlanmaları engellemek amacıyla hızlı ve
+uygun bir şekilde meyvelerin depo zararlılarına karşı fümige edilmesi gerekmektedir.
+Nisan ayından itibaren zararlıların ve taşıyıcısı oldukları hastalıkların çıkışının azaltılmasında
+kimyasal mücadelesi mümkün olmayan ekşilik böcekleri ve sirke sineklerine karşı
+mücadelede geçerli tek yöntem olan, çekici yem tuzaklarının bahçeye asılmasına başlanması
+ve mücadeleye hasat sonu olan eylül’e kadar devam edilmesi gerekmektedir.
+Haziran ayında meyve tutumu için mutlak yapılması gereken ilekleme işlemleri esnasında
+Kanlı balsıra ile mücadele zamanı çakıştığından, zararlının popülasyonunu baskı altına almak
+amacıyla erken ilkbahar döneminde zararlının mevcudiyetinin gözlenmesine başlanmalıdır.
+Kışlayan canlı bireylerin, gözler uyanmadan sıyırma yöntemiyle mekanik mücadelesinin
+yapılması zararlının popülasyonunu baskı altına almada öncelik olmalıdır. Buna rağmen
+kimyasal mücadele eşiğine gelinen durumlarda uygun ilaç ile ilekleme işleminin hemen
+öncesi veya sonrasında, tozlama işlemine zarar vermeyecek şekilde, uygulama yapılması
+gereklidir. Hasat bitiminde de gözlemlere devam edilerek sonbahar mücadelesi yapılmalıdır.
+Kuru incir meyvelerinde kurtlanmayı engellemek amacıyla; bahçenin temiz olmasına dikkat
+edilmeli, hurda incirler ayrı toplanıp kurutulmalı, kurutma kerevetlerde yapılmalı, incir kurdu
+kelebeğinden uzak tutmak için akşamları kerevetlerin üzerinin örtülmesini sağlamalıdır.
+Depo, kuru incir konmadan en az 20 gün önce temizlenerek ilaçlanmalıdır. Zararlının
+(kelebeğin) depoya girişi engellenmelidir. Özellikle kuru incir seçimi akşam saatlerinde ışık
+altında yapılmamalıdır.
+Ana zararlılar ile birlikte, ekonomik zarar eşiğine ulaşmış diğer zararlıların mücadele
+zamanlarının denk gelmesi durumunda, ilaçlamalar entegre edilmelidir. Yine ana hastalıktan
+başka hastalıklar mevcut ve bunların mücadele zamanının da denk gelmesi durumunda,
+zararlılarda olduğu gibi ilaçlamalar entegre edilmelidir. Mücadele zamanları denk gelen
+hastalık ve zararlılara karşı tavsiye edilen ilaçlar farklı ise, bunların birbiriyle
+karıştırılmasının uygunluğuna bakılmalı ve karıştırılması uygun ise karıştırılarak birlikte,
+değil ise ayrı ayrı kullanılmalıdır.
+İncir bahçelerinde ekonomik bir mücadele yapılması için mücadelenin yönetimi, Ek 1
+dikkate alınarak yapılmalıdır.
+Entegre mücadelenin hedefleri arasında yer alan “çiftçilerin kendi tarla, bağ ve bahçesini
+düzenli aralıklarla kontrol edebilme ve karar verebilme düzeyine getirilmesi” amacına uygun
+olarak entegre mücadelenin yönetimi üreticiler tarafından yapılır. Bunun için bahçe sahipleri,
+teorik ve uygulamalı olarak eğitime tabi tutulmak suretiyle, incir hastalık, zararlı ve yabancı
+otları ile bunların doğal düşmanlarını iyi tanıyabilecek seviyeye getirilir. Bunların zarar
+şekilleri veya belirtileri, örnekleme veya kontrol zamanları veya yöntemleri ile ekonomik
+zarar eşikleri üreticilere öğretilir. Ayrıca, üreticilere uygulayacağı mücadele yöntemi ve
+kullanacağı pestisitleri seçebilme, mücadeleye kendi başına karar verebilme ve mücadeleyi
+doğru bir şekilde yönetebilme becerileri kazandırılır.

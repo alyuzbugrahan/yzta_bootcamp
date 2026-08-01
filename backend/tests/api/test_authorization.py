@@ -20,6 +20,7 @@ import pytest
 # (method, path template, expected status when the caller is not the owner)
 ID_ROUTES = [
     ("GET", "/api/v1/sessions/{uuid}", 404),
+    ("PATCH", "/api/v1/sessions/{uuid}", 404),
     ("POST", "/api/v1/sessions/{uuid}/stop", 404),
     ("POST", "/api/v1/sessions/{uuid}/ticket", 404),
     ("DELETE", "/api/v1/sessions/{uuid}", 404),
@@ -39,8 +40,9 @@ UNAUTHENTICATED_ROUTES = [
 
 @pytest.mark.parametrize(("method", "path"), UNAUTHENTICATED_ROUTES)
 async def test_requires_authentication(client, method, path):
+    payload = {"batch_id": "BATCH_UPDATED", "device_label": "Updated"} if method == "PATCH" else {}
     response = await client.request(
-        method, path.format(uuid=uuid_module.uuid4()), json={}
+        method, path.format(uuid=uuid_module.uuid4()), json=payload
     )
 
     assert response.status_code == 401, f"{method} {path} served an unauthenticated caller"
@@ -55,8 +57,12 @@ async def test_requires_authentication(client, method, path):
 async def test_another_farmers_session_is_not_reachable(
     client, farmer, neighbour, open_session, method, path, expected
 ):
+    payload = {"batch_id": "BATCH_UPDATED", "device_label": "Updated"} if method == "PATCH" else {}
     response = await client.request(
-        method, path.format(uuid=open_session["uuid"]), headers=neighbour.headers, json={}
+        method,
+        path.format(uuid=open_session["uuid"]),
+        headers=neighbour.headers,
+        json=payload,
     )
 
     assert response.status_code == expected, (
@@ -69,8 +75,18 @@ async def test_owner_can_reach_their_own_session(
     client, farmer, open_session, method, path, _expected
 ):
     """The mirror of the test above — proves the 404s are about ownership, not broken routes."""
+    payload = {}
+    if method == "PATCH":
+        await client.post(
+            f"/api/v1/sessions/{open_session['uuid']}/stop", headers=farmer.headers
+        )
+        payload = {"batch_id": "BATCH_UPDATED", "device_label": "Updated"}
+
     response = await client.request(
-        method, path.format(uuid=open_session["uuid"]), headers=farmer.headers, json={}
+        method,
+        path.format(uuid=open_session["uuid"]),
+        headers=farmer.headers,
+        json=payload,
     )
 
     assert response.status_code < 400, response.text

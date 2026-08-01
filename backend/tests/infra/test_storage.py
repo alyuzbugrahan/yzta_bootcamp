@@ -1,6 +1,6 @@
 """Storage backends and key construction.
 
-The S3 tests run against MinIO when ``FIGION_TEST_S3_ENDPOINT`` is set (``docker compose up -d
+The S3 tests run against MinIO when ``AGROVISION_TEST_S3_ENDPOINT`` is set (``docker compose up -d
 minio``) and skip otherwise, so the suite still runs on a machine with no object store.
 """
 
@@ -146,10 +146,10 @@ def test_local_has_no_presigned_url(local):
 
 # ── S3Storage (MinIO) ─────────────────────────────────────────────────────
 
-S3_ENDPOINT = os.getenv("FIGION_TEST_S3_ENDPOINT")
+S3_ENDPOINT = os.getenv("AGROVISION_TEST_S3_ENDPOINT")
 
 s3_only = pytest.mark.skipif(
-    not S3_ENDPOINT, reason="set FIGION_TEST_S3_ENDPOINT to test against MinIO"
+    not S3_ENDPOINT, reason="set AGROVISION_TEST_S3_ENDPOINT to test against MinIO"
 )
 
 
@@ -158,10 +158,10 @@ def s3():
     from app.infra.storage.s3 import S3Storage
 
     storage = S3Storage(
-        bucket="figion-test",
+        bucket="agrovision-test",
         endpoint_url=S3_ENDPOINT,
-        access_key=os.getenv("FIGION_TEST_S3_KEY", "figion"),
-        secret_key=os.getenv("FIGION_TEST_S3_SECRET", "figion-secret"),
+        access_key=os.getenv("AGROVISION_TEST_S3_KEY", "agrovision"),
+        secret_key=os.getenv("AGROVISION_TEST_S3_SECRET", "agrovision-secret"),
     )
     storage.ensure_bucket()
     return storage

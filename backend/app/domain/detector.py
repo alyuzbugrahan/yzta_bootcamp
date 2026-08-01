@@ -101,7 +101,7 @@ class Detector:
         Unlike the desktop app (inference_engine.py:102) there is no silent demo fallback
         here. A production server that cannot load its model must say so; whether to
         substitute a demo detector is a deployment decision, made in the provider layer
-        against ``FIGION_MODEL__ALLOW_DEMO``.
+        against ``AGROVISION_MODEL__ALLOW_DEMO``.
         """
         if self._try_load(self._model_path):
             return
