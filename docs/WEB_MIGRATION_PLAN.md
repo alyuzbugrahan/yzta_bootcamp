@@ -1,4 +1,4 @@
-# Figion — Desktop → Web Backend Migration Plan
+# Agrovision — Desktop → Web Backend Migration Plan
 
 **Scope:** backend only. This document defines the server architecture, the API contract the
 frontend will consume, and an ordered implementation plan. No frontend code is specified beyond
