@@ -1,4 +1,4 @@
-# Figion Backend — Frontend Integration Guide
+# Agrovision Backend — Frontend Integration Guide
 
 Everything the web client needs to talk to the backend. The live OpenAPI schema at **`/docs`**
 is generated from the code and is the authority if this document ever drifts from it.
