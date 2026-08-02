@@ -1,4 +1,4 @@
-# Figion — Desktop to Web Migration: Scope of Work
+# Agrovision — Desktop to Web Migration: Scope of Work
 
 What was built, why each decision was made, what was found along the way, and what is still
 unproven. Companion documents: [`WEB_MIGRATION_PLAN.md`](WEB_MIGRATION_PLAN.md) (the phase plan
